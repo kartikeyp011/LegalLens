@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Account — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'] },
+          colors: {
+            universe: {
+              darkest: '#030614',
+              darker: '#0a0c1a',
+              deep: '#11142b',
+              navy: '#1a1f3a',
+            }
+          },
+          animation: { 'fade-up': 'fadeUp 0.5s ease-out forwards' },
+          keyframes: { fadeUp: { '0%': { opacity:'0', transform:'translateY(20px)' }, '100%': { opacity:'1', transform:'translateY(0)' } } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family:'Inter',sans-serif; background:radial-gradient(ellipse at 30% 40%, #1a1f3a 0%, #0a0c1a 50%, #030614 100%); color:#e2e8f0; min-height:100vh; }
+    .glass      { background:rgba(5, 10, 25, 0.6); backdrop-filter:blur(16px); border:1px solid rgba(65, 105, 225, 0.2); box-shadow:0 20px 40px -15px rgba(0,0,30,0.5); }
+    .gradient-text { background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background:linear-gradient(135deg,#3a4b8c,#1e2b5a); transition:all 0.3s ease; }
+    .btn-primary:hover { background:linear-gradient(135deg,#4f5fa0,#2a3b70); transform:translateY(-2px); box-shadow:0 12px 40px rgba(30, 60, 180, 0.4); }
+    .input-field { background:rgba(10, 15, 35, 0.6); border:1px solid rgba(65, 105, 225, 0.25); color:#e2e8f0; transition:all 0.3s ease; }
+    .input-field:focus { outline:none; border-color:#4f6fcf; background:rgba(20, 30, 60, 0.7); box-shadow:0 0 0 3px rgba(65, 105, 225, 0.2); }
+    .input-field::placeholder { color:#475569; }
+    .role-card { background:rgba(10, 15, 35, 0.6); border:1px solid rgba(65, 105, 225, 0.2); cursor:pointer; transition:all 0.3s ease; }
+    .role-card:hover { background:rgba(20, 30, 60, 0.8); border-color:rgba(65, 105, 225, 0.4); }
+    .role-card.selected { background:rgba(30, 45, 90, 0.8); border-color:#4f6fcf; box-shadow:0 0 20px rgba(65, 105, 225, 0.3); }
+    .role-card.selected .role-check { opacity:1; }
+    .role-check { opacity:0; transition:opacity 0.2s; }
+    .step-indicator { transition:all 0.4s ease; }
+    .step-active   { background:linear-gradient(135deg,#3a4b8c,#1e2b5a); color:white; }
+    .step-done     { background:#2e7d5e; color:white; }
+    .step-inactive { background:rgba(20, 30, 50, 0.6); color:#64748b; }
+    .strength-bar  { height:4px; border-radius:2px; transition:width 0.4s ease; }
+    .upload-zone   { border:2px dashed rgba(65, 105, 225, 0.3); transition:all 0.3s ease; }
+    .upload-zone:hover, .upload-zone.dragover { border-color:#4f6fcf; background:rgba(20, 30, 60, 0.8); }
+    .field-error { border-color:#ef4444 !important; }
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:#030614; }
+    ::-webkit-scrollbar-thumb { background:#2a3b70; border-radius:3px; }
+    /* Stars effect */
+    .star { position:absolute; background:white; border-radius:50%; opacity:0.3; animation: twinkle 4s infinite; }
+    @keyframes twinkle { 0%,100%{opacity:0.2;} 50%{opacity:0.6;} }
+  </style>
+</head>
+<body>
+
+<!-- Stars background -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden">
+  <div class="star w-px h-px top-1/4 left-1/5"></div>
+  <div class="star w-0.5 h-0.5 top-2/3 left-2/3"></div>
+  <div class="star w-px h-px top-1/2 left-3/4"></div>
+  <div class="star w-0.5 h-0.5 top-1/5 left-4/5"></div>
+  <div class="star w-px h-px top-3/4 left-1/3"></div>
+  <div class="star w-0.5 h-0.5 top-2/5 left-1/2"></div>
+  <div class="star w-px h-px top-4/5 left-3/5"></div>
+  <div class="star w-0.5 h-0.5 top-1/3 left-1/4"></div>
+  <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-900/10 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-1/4 left-1/4 w-80 h-80 bg-indigo-900/10 rounded-full blur-3xl"></div>
+</div>
+
+<!-- Navbar -->
+<nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between">
+  <a href="index.html" class="flex items-center gap-3">
+    <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center">
+      <i class="fas fa-scale-balanced text-white text-sm"></i>
+    </div>
+    <span class="text-xl font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+  </a>
+  <a href="login.html" class="glass rounded-xl px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all">
+    Sign In <i class="fas fa-arrow-right ml-1 text-xs"></i>
+  </a>
+</nav>
+
+<!-- Main -->
+<main class="min-h-screen flex items-center justify-center px-6 pt-24 pb-12 relative z-10">
+  <div class="w-full max-w-lg animate-fade-up">
+
+    <!-- Step Progress Bar -->
+    <div class="flex items-center justify-center gap-2 mb-8" id="stepBar">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- ─── STEP 1: Role Selection ─── -->
+    <div id="step1" class="glass rounded-3xl p-8 space-y-6">
+      <div class="text-center space-y-2">
+        <h1 class="text-2xl font-black text-white">Join LegalLens</h1>
+        <p class="text-slate-400 text-sm">First, tell us who you are</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3" id="roleGrid">
+        <!-- Role cards injected by JS -->
+      </div>
+
+      <button onclick="goStep(2)"
+        class="btn-primary w-full py-4 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+        Continue <i class="fas fa-arrow-right text-xs"></i>
+      </button>
+
+      <p class="text-center text-slate-500 text-sm">
+        Already have an account?
+        <a href="login.html" class="text-indigo-400 hover:text-indigo-300 font-medium ml-1">Sign in</a>
+      </p>
+    </div>
+
+    <!-- ─── STEP 2: Account Details ─── -->
+    <div id="step2" class="hidden glass rounded-3xl p-8 space-y-5">
+      <div class="space-y-1">
+        <button onclick="goStep(1)" class="text-slate-500 hover:text-white transition-colors text-sm flex items-center gap-2 mb-3">
+          <i class="fas fa-arrow-left text-xs"></i> Back
+        </button>
+        <h2 class="text-2xl font-black text-white">Your Details</h2>
+        <p class="text-slate-400 text-sm">Set up your account credentials</p>
+      </div>
+
+      <!-- Selected Role Badge -->
+      <div id="selectedRoleBadge" class="glass rounded-2xl px-4 py-3 flex items-center gap-3">
+        <span id="badgeIcon" class="text-lg"></span>
+        <div>
+          <p id="badgeRole"  class="text-white font-semibold text-sm"></p>
+          <p id="badgeDesc"  class="text-slate-500 text-xs"></p>
+        </div>
+        <button onclick="goStep(1)" class="ml-auto text-indigo-400 text-xs hover:text-indigo-300">Change</button>
+      </div>
+
+      <!-- Error Banner -->
+      <div id="step2Error" class="hidden glass rounded-2xl p-4 border border-red-500/30 bg-red-500/10">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-circle-exclamation text-red-400"></i>
+          <p id="step2ErrorMsg" class="text-red-300 text-sm"></p>
+        </div>
+      </div>
+
+      <form id="step2Form" class="space-y-4" novalidate>
+        <!-- Full Name -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Full Name</label>
+          <div class="relative">
+            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+            <input id="fullName" type="text" placeholder="e.g. Rahul Kumar Sharma"
+              class="input-field w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm"/>
+          </div>
+          <p id="fullNameErr" class="text-red-400 text-xs hidden"></p>
+        </div>
+
+        <!-- Email -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Email Address</label>
+          <div class="relative">
+            <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+            <input id="regEmail" type="email" placeholder="you@example.com"
+              class="input-field w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm"
+              autocomplete="email"/>
+          </div>
+          <p id="regEmailErr" class="text-red-400 text-xs hidden"></p>
+        </div>
+
+        <!-- Phone -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Phone Number</label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none">+91</span>
+            <input id="phone" type="tel" placeholder="98765 43210"
+              class="input-field w-full pl-14 pr-4 py-3.5 rounded-2xl text-sm" maxlength="10"/>
+          </div>
+          <p id="phoneErr" class="text-red-400 text-xs hidden"></p>
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Password</label>
+          <div class="relative">
+            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+            <input id="regPassword" type="password" placeholder="Min 8 characters"
+              class="input-field w-full pl-11 pr-12 py-3.5 rounded-2xl text-sm"
+              oninput="checkPasswordStrength(this.value)"
+              autocomplete="new-password"/>
+            <button type="button" onclick="toggleRegPassword()"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+              <i id="regPwdIcon" class="fas fa-eye text-sm"></i>
+            </button>
+          </div>
+          <!-- Strength Meter -->
+          <div class="space-y-1.5">
+            <div class="flex gap-1.5">
+              <div class="flex-1 h-1 rounded-full bg-slate-800 overflow-hidden"><div id="bar1" class="strength-bar w-0 bg-red-500"></div></div>
+              <div class="flex-1 h-1 rounded-full bg-slate-800 overflow-hidden"><div id="bar2" class="strength-bar w-0 bg-amber-500"></div></div>
+              <div class="flex-1 h-1 rounded-full bg-slate-800 overflow-hidden"><div id="bar3" class="strength-bar w-0 bg-green-500"></div></div>
+              <div class="flex-1 h-1 rounded-full bg-slate-800 overflow-hidden"><div id="bar4" class="strength-bar w-0 bg-emerald-400"></div></div>
+            </div>
+            <p id="strengthLabel" class="text-xs text-slate-600"></p>
+          </div>
+          <p id="regPasswordErr" class="text-red-400 text-xs hidden"></p>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Confirm Password</label>
+          <div class="relative">
+            <i class="fas fa-shield-halved absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+            <input id="confirmPassword" type="password" placeholder="Repeat your password"
+              class="input-field w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm"
+              autocomplete="new-password"/>
+          </div>
+          <p id="confirmPasswordErr" class="text-red-400 text-xs hidden"></p>
+        </div>
+
+        <button type="submit"
+          class="btn-primary w-full py-4 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+          <span id="step2BtnText">Continue</span>
+          <i id="step2BtnIcon" class="fas fa-arrow-right text-xs"></i>
+          <i id="step2Spinner" class="fas fa-circle-notch fa-spin hidden"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- ─── STEP 3a: Lawyer Verification ─── -->
+    <div id="step3lawyer" class="hidden glass rounded-3xl p-8 space-y-6">
+      <div class="space-y-1">
+        <button onclick="goStep(2)" class="text-slate-500 hover:text-white transition-colors text-sm flex items-center gap-2 mb-3">
+          <i class="fas fa-arrow-left text-xs"></i> Back
+        </button>
+        <h2 class="text-2xl font-black text-white">Lawyer Verification</h2>
+        <p class="text-slate-400 text-sm">Upload your Bar Council credentials for AI verification</p>
+      </div>
+
+      <!-- Info Card -->
+      <div class="glass rounded-2xl p-4 border border-indigo-500/20 bg-indigo-500/5 space-y-2">
+        <div class="flex items-start gap-3">
+          <i class="fas fa-info-circle text-indigo-400 mt-0.5"></i>
+          <div class="space-y-1">
+            <p class="text-white text-sm font-medium">Verification Process</p>
+            <p class="text-slate-400 text-xs leading-relaxed">Our AI verifies your documents instantly. Final admin approval takes up to 15 days. You'll be notified via email.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Bar Council ID -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Bar Council Enrollment Number</label>
+          <div class="relative">
+            <i class="fas fa-id-card absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+            <input id="barCouncilId" type="text" placeholder="e.g. D/1234/2019"
+              class="input-field w-full pl-11 pr-4 py-3.5 rounded-2xl text-sm"/>
+          </div>
+        </div>
+
+        <!-- Specialization -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Specialization</label>
+          <select id="specialization" class="input-field w-full px-4 py-3.5 rounded-2xl text-sm appearance-none cursor-pointer">
+            <option value="" disabled selected class="bg-slate-900">Select your area of practice</option>
+            <option value="criminal"  class="bg-slate-900">Criminal Law</option>
+            <option value="civil"     class="bg-slate-900">Civil Law</option>
+            <option value="family"    class="bg-slate-900">Family Law</option>
+            <option value="property"  class="bg-slate-900">Property Law</option>
+            <option value="consumer"  class="bg-slate-900">Consumer Law</option>
+            <option value="corporate" class="bg-slate-900">Corporate / Commercial</option>
+            <option value="labour"    class="bg-slate-900">Labour Law</option>
+            <option value="cyber"     class="bg-slate-900">Cyber Law</option>
+          </select>
+        </div>
+
+        <!-- Document Upload -->
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Upload Verification Document</label>
+          <div id="uploadZone" class="upload-zone rounded-2xl p-6 text-center cursor-pointer"
+            onclick="document.getElementById('docUpload').click()"
+            ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <input id="docUpload" type="file" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleFileSelect(this)"/>
+            <div id="uploadDefault" class="space-y-3">
+              <div class="w-12 h-12 rounded-2xl glass flex items-center justify-center mx-auto">
+                <i class="fas fa-cloud-arrow-up text-indigo-400 text-xl"></i>
+              </div>
+              <div>
+                <p class="text-white text-sm font-medium">Drop your document here</p>
+                <p class="text-slate-500 text-xs mt-1">Bar Council ID card or enrollment certificate • PDF, JPG, PNG • Max 5MB</p>
+              </div>
+            </div>
+            <div id="uploadSuccess" class="hidden space-y-2">
+              <div class="w-12 h-12 rounded-2xl bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto">
+                <i class="fas fa-check text-green-400 text-xl"></i>
+              </div>
+              <p id="uploadFileName" class="text-green-300 text-sm font-medium"></p>
+              <p class="text-slate-500 text-xs">Click to change file</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="submitLawyerVerification()"
+        class="btn-primary w-full py-4 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+        Submit for Verification <i class="fas fa-paper-plane text-xs"></i>
+      </button>
+    </div>
+
+    <!-- ─── STEP 3b: User Agreement ─── -->
+    <div id="step3user" class="hidden glass rounded-3xl p-8 space-y-6">
+      <div class="space-y-1">
+        <button onclick="goStep(2)" class="text-slate-500 hover:text-white transition-colors text-sm flex items-center gap-2 mb-3">
+          <i class="fas fa-arrow-left text-xs"></i> Back
+        </button>
+        <h2 class="text-2xl font-black text-white">Almost Done!</h2>
+        <p class="text-slate-400 text-sm">Review and accept to create your account</p>
+      </div>
+
+      <!-- Account Summary -->
+      <div class="glass rounded-2xl p-5 space-y-3">
+        <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Account Summary</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div><p class="text-slate-500 text-xs">Name</p><p id="summaryName"  class="text-white text-sm font-medium mt-0.5"></p></div>
+          <div><p class="text-slate-500 text-xs">Email</p><p id="summaryEmail" class="text-white text-sm font-medium mt-0.5 truncate"></p></div>
+          <div><p class="text-slate-500 text-xs">Role</p><p id="summaryRole"  class="text-white text-sm font-medium mt-0.5"></p></div>
+          <div><p class="text-slate-500 text-xs">Phone</p><p id="summaryPhone" class="text-white text-sm font-medium mt-0.5"></p></div>
+        </div>
+      </div>
+
+      <!-- Terms -->
+      <div class="space-y-3">
+        <div class="flex items-start gap-3">
+          <input id="terms" type="checkbox" class="w-4 h-4 mt-0.5 accent-indigo-500 cursor-pointer flex-shrink-0"/>
+          <label for="terms" class="text-slate-400 text-sm cursor-pointer leading-relaxed">
+            I agree to the <a href="#" class="text-indigo-400 hover:text-indigo-300">Terms of Service</a> and <a href="#" class="text-indigo-400 hover:text-indigo-300">Privacy Policy</a>
+          </label>
+        </div>
+        <div class="flex items-start gap-3">
+          <input id="disclaimer" type="checkbox" class="w-4 h-4 mt-0.5 accent-indigo-500 cursor-pointer flex-shrink-0"/>
+          <label for="disclaimer" class="text-slate-400 text-sm cursor-pointer leading-relaxed">
+            I understand LegalLens provides AI-assisted legal information, not professional legal advice
+          </label>
+        </div>
+      </div>
+      <p id="termsErr" class="text-red-400 text-xs hidden">Please accept both checkboxes to continue.</p>
+
+      <button onclick="finalSubmit()"
+        class="btn-primary w-full py-4 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+        <span id="finalBtnText">Create My Account</span>
+        <i id="finalBtnIcon"    class="fas fa-check text-xs"></i>
+        <i id="finalSpinner"    class="fas fa-circle-notch fa-spin hidden"></i>
+      </button>
+    </div>
+
+    <!-- ─── STEP 4: Success ─── -->
+    <div id="step4" class="hidden glass rounded-3xl p-10 text-center space-y-6">
+      <div class="w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center mx-auto">
+        <i class="fas fa-check text-green-400 text-3xl"></i>
+      </div>
+      <div class="space-y-2">
+        <h2 class="text-2xl font-black text-white">Account Created!</h2>
+        <p id="successMsg" class="text-slate-400 text-sm leading-relaxed"></p>
+      </div>
+      <div class="glass rounded-2xl p-4 text-left space-y-2" id="successDetails">
+        <!-- Injected by JS -->
+      </div>
+      <a id="successRedirect" href="login.html"
+        class="btn-primary block w-full py-4 rounded-2xl text-white font-semibold text-sm text-center">
+        Go to Dashboard <i class="fas fa-arrow-right ml-1 text-xs"></i>
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // ── State
+  let currentStep  = 1;
+  let selectedRole = 'user';
+  let formData     = {};
+
+  const ROLES = [
+    { id:'user',   icon:'👤', label:'Citizen',  color:'indigo', desc:'I need legal help',            badge:'Access AI assistant, upload docs, open cases' },
+    { id:'lawyer', icon:'⚖️', label:'Lawyer',   color:'purple', desc:'I am a legal professional',    badge:'Receive & manage assigned client cases' },
+  ];
+
+  // ── Render step bar
+  function renderStepBar() {
+    const bar   = document.getElementById('stepBar');
+    const steps = selectedRole === 'lawyer'
+      ? [{ n:1, label:'Role' }, { n:2, label:'Details' }, { n:3, label:'Verify' }, { n:4, label:'Done' }]
+      : [{ n:1, label:'Role' }, { n:2, label:'Details' }, { n:3, label:'Confirm' }, { n:4, label:'Done' }];
+
+    bar.innerHTML = steps.map((s, i) => `
+      <div class="flex items-center gap-2">
+        <div class="step-indicator w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${currentStep === s.n ? 'step-active' : currentStep > s.n ? 'step-done' : 'step-inactive'}">
+          ${currentStep > s.n ? '<i class="fas fa-check text-xs"></i>' : s.n}
+        </div>
+        <span class="text-xs hidden sm:inline ${currentStep >= s.n ? 'text-slate-300' : 'text-slate-600'}">${s.label}</span>
+        ${i < steps.length - 1 ? `<div class="w-6 sm:w-10 h-px ${currentStep > s.n ? 'bg-green-500' : 'bg-white/10'} mx-1"></div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ── Render role cards
+  function renderRoles() {
+    const grid = document.getElementById('roleGrid');
+    grid.innerHTML = ROLES.map(r => `
+      <div onclick="selectRole('${r.id}')" class="role-card rounded-2xl p-5 relative ${selectedRole === r.id ? 'selected' : ''}">
+        <div class="role-check absolute top-3 right-3 w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center">
+          <i class="fas fa-check text-white text-xs"></i>
+        </div>
+        <div class="text-3xl mb-3">${r.icon}</div>
+        <p class="text-white font-bold text-sm">${r.label}</p>
+        <p class="text-slate-500 text-xs mt-1">${r.desc}</p>
+      </div>
+    `).join('');
+  }
+
+  function selectRole(role) {
+    selectedRole = role;
+    renderRoles();
+    renderStepBar();
+  }
+
+  // ── Navigate steps
+  function goStep(n) {
+    const allSteps = ['step1','step2','step3lawyer','step3user','step4'];
+    allSteps.forEach(id => document.getElementById(id).classList.add('hidden'));
+
+    currentStep = n;
+    renderStepBar();
+
+    if (n === 1) { document.getElementById('step1').classList.remove('hidden'); return; }
+    if (n === 2) {
+      document.getElementById('step2').classList.remove('hidden');
+      const role = ROLES.find(r => r.id === selectedRole);
+      document.getElementById('badgeIcon').textContent  = role.icon;
+      document.getElementById('badgeRole').textContent  = role.label;
+      document.getElementById('badgeDesc').textContent  = role.badge;
+      return;
+    }
+    if (n === 3) {
+      if (selectedRole === 'lawyer') {
+        document.getElementById('step3lawyer').classList.remove('hidden');
+      } else {
+        // Populate summary
+        document.getElementById('summaryName').textContent  = formData.fullName;
+        document.getElementById('summaryEmail').textContent = formData.email;
+        document.getElementById('summaryRole').textContent  = ROLES.find(r => r.id === selectedRole)?.label || selectedRole;
+        document.getElementById('summaryPhone').textContent = '+91 ' + formData.phone;
+        document.getElementById('step3user').classList.remove('hidden');
+      }
+      return;
+    }
+    if (n === 4) { document.getElementById('step4').classList.remove('hidden'); return; }
+  }
+
+  // ── Password strength
+  function checkPasswordStrength(pwd) {
+    const bars   = ['bar1','bar2','bar3','bar4'];
+    const label  = document.getElementById('strengthLabel');
+    let score    = 0;
+    if (pwd.length >= 8)               score++;
+    if (/[A-Z]/.test(pwd))             score++;
+    if (/[0-9]/.test(pwd))             score++;
+    if (/[^A-Za-z0-9]/.test(pwd))      score++;
+    const labels = ['','Weak','Fair','Good','Strong'];
+    const colors = ['','text-red-400','text-amber-400','text-blue-400','text-green-400'];
+    bars.forEach((b, i) => {
+      document.getElementById(b).style.width = i < score ? '100%' : '0%';
+    });
+    label.textContent = score > 0 ? labels[score] : '';
+    label.className   = `text-xs ${colors[score] || 'text-slate-600'}`;
+  }
+
+  function toggleRegPassword() {
+    const pwd  = document.getElementById('regPassword');
+    const icon = document.getElementById('regPwdIcon');
+    if (pwd.type === 'password') { pwd.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash'); }
+    else                         { pwd.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
+  }
+
+  // ── Step 2 form submit
+  document.getElementById('step2Form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    // Clear errors
+    ['fullNameErr','regEmailErr','phoneErr','regPasswordErr','confirmPasswordErr']
+      .forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('step2Error').classList.add('hidden');
+
+    const fullName       = document.getElementById('fullName').value.trim();
+    const email          = document.getElementById('regEmail').value.trim();
+    const phone          = document.getElementById('phone').value.trim();
+    const password       = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    let valid = true;
+    if (!fullName || fullName.length < 3) {
+      document.getElementById('fullNameErr').textContent = 'Enter your full name (min 3 characters).';
+      document.getElementById('fullNameErr').classList.remove('hidden'); valid = false;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('regEmailErr').textContent = 'Enter a valid email address.';
+      document.getElementById('regEmailErr').classList.remove('hidden'); valid = false;
+    }
+    if (!phone || !/^\d{10}$/.test(phone)) {
+      document.getElementById('phoneErr').textContent = 'Enter a valid 10-digit phone number.';
+      document.getElementById('phoneErr').classList.remove('hidden'); valid = false;
+    }
+    if (!password || password.length < 8) {
+      document.getElementById('regPasswordErr').textContent = 'Password must be at least 8 characters.';
+      document.getElementById('regPasswordErr').classList.remove('hidden'); valid = false;
+    }
+    if (password !== confirmPassword) {
+      document.getElementById('confirmPasswordErr').textContent = 'Passwords do not match.';
+      document.getElementById('confirmPasswordErr').classList.remove('hidden'); valid = false;
+    }
+    if (!valid) return;
+
+    // Loading
+    document.getElementById('step2BtnText').textContent = 'Checking...';
+    document.getElementById('step2BtnIcon').classList.add('hidden');
+    document.getElementById('step2Spinner').classList.remove('hidden');
+    await new Promise(r => setTimeout(r, 800));
+    document.getElementById('step2BtnText').textContent = 'Continue';
+    document.getElementById('step2BtnIcon').classList.remove('hidden');
+    document.getElementById('step2Spinner').classList.add('hidden');
+
+    formData = { fullName, email, phone, password };
+    goStep(3);
+  });
+
+  // ── File upload handlers
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.add('dragover');
+  }
+  function handleDragLeave(e) {
+    document.getElementById('uploadZone').classList.remove('dragover');
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) showUploadSuccess(file);
+  }
+  function handleFileSelect(input) {
+    if (input.files[0]) showUploadSuccess(input.files[0]);
+  }
+  function showUploadSuccess(file) {
+    document.getElementById('uploadDefault').classList.add('hidden');
+    document.getElementById('uploadSuccess').classList.remove('hidden');
+    document.getElementById('uploadFileName').textContent = file.name;
+    formData.verificationDoc = file.name;
+  }
+
+  // ── Lawyer verification submit
+  async function submitLawyerVerification() {
+    formData.barCouncilId    = document.getElementById('barCouncilId').value;
+    formData.specialization  = document.getElementById('specialization').value;
+
+    // Populate summary for step4
+    const successDetails = document.getElementById('successDetails');
+    successDetails.innerHTML = `
+      <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">What happens next?</p>
+      <div class="space-y-2">
+        <div class="flex items-center gap-2 text-xs text-slate-300"><i class="fas fa-robot text-indigo-400 w-4"></i>AI verifies your documents instantly</div>
+        <div class="flex items-center gap-2 text-xs text-slate-300"><i class="fas fa-clock text-amber-400 w-4"></i>Admin approval within 15 days</div>
+        <div class="flex items-center gap-2 text-xs text-slate-300"><i class="fas fa-envelope text-green-400 w-4"></i>You'll receive an email notification</div>
+      </div>
+    `;
+    document.getElementById('successMsg').textContent = `Welcome, ${formData.fullName}! Your lawyer account is pending verification. You'll be notified once approved.`;
+    document.getElementById('successRedirect').href   = `login.html?email=${encodeURIComponent(formData.email)}`;
+    document.getElementById('successRedirect').textContent = 'Go to Sign In';
+
+    // Mock save session and show step 4
+    currentStep = 4;
+    renderStepBar();
+    ['step1','step2','step3lawyer','step3user'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('step4').classList.remove('hidden');
+  }
+
+  // ── Final submit (non-lawyer roles)
+  async function finalSubmit() {
+    const terms      = document.getElementById('terms').checked;
+    const disclaimer = document.getElementById('disclaimer').checked;
+    if (!terms || !disclaimer) {
+      document.getElementById('termsErr').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('termsErr').classList.add('hidden');
+
+    document.getElementById('finalBtnText').textContent = 'Creating account...';
+    document.getElementById('finalBtnIcon').classList.add('hidden');
+    document.getElementById('finalSpinner').classList.remove('hidden');
+    await new Promise(r => setTimeout(r, 1200));
+
+    // Mock session
+    const session = {
+      user_id: Math.random().toString(36).substr(2,9),
+      email:   formData.email,
+      name:    formData.fullName,
+      role:    selectedRole,
+      token:   'mock_jwt_' + Date.now(),
+    };
+    sessionStorage.setItem('ll_session', JSON.stringify(session));
+
+    const redirectMap = { user:'dashboard.html', judge:'judge-dashboard.html' };
+    document.getElementById('successMsg').textContent = `Welcome to LegalLens, ${formData.fullName}! Your account is ready.`;
+    document.getElementById('successDetails').innerHTML = `
+      <div class="grid grid-cols-2 gap-3">
+        <div><p class="text-slate-500 text-xs">Name</p><p class="text-white text-sm font-medium mt-0.5">${formData.fullName}</p></div>
+        <div><p class="text-slate-500 text-xs">Role</p><p class="text-white text-sm font-medium mt-0.5">${ROLES.find(r=>r.id===selectedRole)?.label || selectedRole}</p></div>
+      </div>
+    `;
+    document.getElementById('successRedirect').href = redirectMap[selectedRole] || 'dashboard.html';
+
+    currentStep = 4;
+    renderStepBar();
+    ['step1','step2','step3lawyer','step3user'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('step4').classList.remove('hidden');
+  }
+
+  // ── URL param: pre-select role
+  const urlParams  = new URLSearchParams(window.location.search);
+  const roleParam  = urlParams.get('role');
+  if (roleParam && ROLES.find(r => r.id === roleParam)) selectedRole = roleParam;
+  const planParam  = urlParams.get('plan');
+
+  // ── Init
+  renderStepBar();
+  renderRoles();
+
+  // Create random stars
+  function createStars() {
+    const container = document.querySelector('.fixed.inset-0');
+    for (let i = 0; i < 50; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 2 + 1;
+      star.style.width = size + 'px';
+      star.style.height = size + 'px';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(star);
+    }
+  }
+  createStars();
+</script>
+</body>
+</html>
