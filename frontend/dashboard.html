@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'] },
+          animation: {
+            'fade-up':    'fadeUp 0.5s ease-out forwards',
+            'fade-in':    'fadeIn 0.4s ease-out forwards',
+            'pulse-slow': 'pulse 3s ease-in-out infinite',
+            'slide-in':   'slideIn 0.3s ease-out forwards',
+          },
+          keyframes: {
+            fadeUp:  { '0%': { opacity:'0', transform:'translateY(16px)' }, '100%': { opacity:'1', transform:'translateY(0)' } },
+            fadeIn:  { '0%': { opacity:'0' }, '100%': { opacity:'1' } },
+            slideIn: { '0%': { opacity:'0', transform:'translateX(-10px)' }, '100%': { opacity:'1', transform:'translateX(0)' } },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family:'Inter',sans-serif; background:#0a0a0f; color:#e2e8f0; }
+    .glass      { background:rgba(255,255,255,0.05); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); }
+    .glass-dark { background:rgba(10,10,20,0.85);   backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.06); }
+    .gradient-text { background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); transition:all 0.3s; }
+    .btn-primary:hover { background:linear-gradient(135deg,#4f46e5,#7c3aed); transform:translateY(-1px); box-shadow:0 8px 30px rgba(99,102,241,0.35); }
+    .sidebar-link { transition:all 0.2s ease; border-radius:0.75rem; }
+    .sidebar-link:hover  { background:rgba(255,255,255,0.06); color:#fff; }
+    .sidebar-link.active { background:rgba(99,102,241,0.18); color:#a5b4fc; border:1px solid rgba(99,102,241,0.25); }
+    .stat-card { transition:transform 0.3s, box-shadow 0.3s; }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(99,102,241,0.15); }
+    .quick-action { transition:all 0.25s ease; border:1px solid rgba(255,255,255,0.07); }
+    .quick-action:hover { transform:translateY(-3px); background:rgba(255,255,255,0.08); border-color:rgba(99,102,241,0.3); }
+    .case-row { transition:background 0.2s; }
+    .case-row:hover { background:rgba(255,255,255,0.04); }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:0.7rem; font-weight:600; }
+    .badge-active   { background:rgba(34,197,94,0.15);  color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
+    .badge-pending  { background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
+    .badge-closed   { background:rgba(148,163,184,0.1); color:#94a3b8; border:1px solid rgba(148,163,184,0.15); }
+    .badge-hearing  { background:rgba(99,102,241,0.15); color:#a5b4fc; border:1px solid rgba(99,102,241,0.25); }
+    .progress-bar { height:5px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; }
+    .progress-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+    .notification-dot { width:8px; height:8px; background:#6366f1; border-radius:50%; position:absolute; top:2px; right:2px; }
+    .mobile-overlay { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#374151; border-radius:3px; }
+    .chart-bar { transition:height 0.8s ease; }
+  </style>
+</head>
+
+<body class="flex h-screen overflow-hidden">
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════ -->
+<aside id="sidebar"
+  class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+
+  <!-- Logo -->
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-scale-balanced text-white text-xs"></i>
+      </div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- User Info -->
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0" id="sidebarAvatar">R</div>
+      <div class="min-w-0">
+        <p class="text-white font-semibold text-sm truncate" id="sidebarName">Rahul Sharma</p>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+          <span class="text-slate-500 text-xs">Citizen</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pb-2">Main</p>
+    <a href="dashboard.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+      <i class="fas fa-gauge-high w-4 text-center text-indigo-400"></i> Dashboard
+    </a>
+    <a href="cases.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-folder-open w-4 text-center"></i> My Cases
+      <span class="ml-auto bg-indigo-500/20 text-indigo-300 text-xs px-2 py-0.5 rounded-full">3</span>
+    </a>
+    <a href="assistant.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-robot w-4 text-center"></i> AI Assistant
+    </a>
+    <a href="documents.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-file-magnifying-glass w-4 text-center"></i> Document Analyzer
+    </a>
+    <a href="drafts.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-file-pen w-4 text-center"></i> Draft Generator
+    </a>
+
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-2">Planning</p>
+    <a href="planning.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-list-check w-4 text-center"></i> Checklists
+    </a>
+    <a href="planning.html#timeline" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-timeline w-4 text-center"></i> Timeline
+    </a>
+    <a href="planning.html#costs" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-calculator w-4 text-center"></i> Cost Estimator
+    </a>
+    <a href="hearings.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-gavel w-4 text-center"></i> Hearings
+      <span class="ml-auto w-2 h-2 bg-amber-400 rounded-full animate-pulse-slow"></span>
+    </a>
+
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-2">Resources</p>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-book-open w-4 text-center"></i> Legal Awareness
+    </a>
+
+  </nav>
+
+  <!-- Bottom -->
+  <div class="px-3 py-4 border-t border-white/5 space-y-0.5">
+    <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-gear w-4 text-center"></i> Settings
+    </a>
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400">
+      <i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Sidebar Overlay (mobile) -->
+<div id="sidebarOverlay" class="fixed inset-0 z-30 mobile-overlay hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+  <!-- Top Bar -->
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <!-- Mobile Sidebar Toggle -->
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white transition-colors">
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+
+    <!-- Breadcrumb -->
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i>
+      <i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium">Dashboard</span>
+    </div>
+
+    <!-- Search -->
+    <div class="flex-1 max-w-md ml-auto sm:ml-4">
+      <div class="relative">
+        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none"></i>
+        <input type="text" placeholder="Search cases, documents..."
+          class="w-full bg-white/4 border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:bg-indigo-500/5 transition-all"/>
+      </div>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <!-- Notifications -->
+      <button onclick="toggleNotifications()" class="relative w-9 h-9 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+        <i class="fas fa-bell text-sm"></i>
+        <span class="notification-dot"></span>
+      </button>
+
+      <!-- New Case -->
+      <button onclick="openNewCaseModal()" class="btn-primary hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium">
+        <i class="fas fa-plus text-xs"></i>
+        New Case
+      </button>
+
+      <!-- Avatar -->
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm cursor-pointer flex-shrink-0" id="topAvatar">R</div>
+    </div>
+  </header>
+
+  <!-- Notifications Dropdown -->
+  <div id="notifDropdown" class="hidden fixed top-16 right-4 z-50 w-80 glass-dark rounded-2xl border border-white/8 shadow-2xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-white font-semibold text-sm">Notifications</h3>
+      <button class="text-indigo-400 text-xs hover:text-indigo-300">Mark all read</button>
+    </div>
+    <div class="divide-y divide-white/5 max-h-80 overflow-y-auto" id="notifList"></div>
+    <div class="px-5 py-3 border-t border-white/5 text-center">
+      <a href="#" class="text-indigo-400 text-xs hover:text-indigo-300">View all notifications</a>
+    </div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <main class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+
+    <!-- Welcome Banner -->
+    <div class="glass rounded-2xl px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-up"
+      style="background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(168,85,247,0.08)); border-color:rgba(99,102,241,0.2);">
+      <div>
+        <h1 class="text-xl font-black text-white">Good evening, <span id="welcomeName" class="gradient-text">Rahul</span> 👋</h1>
+        <p class="text-slate-400 text-sm mt-1">You have <span id="activeCount" class="text-indigo-300 font-semibold">1 active case</span> and a hearing scheduled tomorrow.</p>
+      </div>
+      <button onclick="openNewCaseModal()" class="btn-primary flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold">
+        <i class="fas fa-plus text-xs"></i> Open New Case
+      </button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center">
+            <i class="fas fa-folder-open text-indigo-400 text-sm"></i>
+          </div>
+          <span class="text-green-400 text-xs font-semibold flex items-center gap-1">
+            <i class="fas fa-arrow-up text-xs"></i> Active
+          </span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white" id="statCases">3</p>
+          <p class="text-slate-500 text-xs mt-0.5">Total Cases</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-indigo-500 to-purple-500 w-3/4"></div></div>
+      </div>
+
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/25 flex items-center justify-center">
+            <i class="fas fa-file-alt text-purple-400 text-sm"></i>
+          </div>
+          <span class="text-purple-400 text-xs font-semibold">Analyzed</span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white" id="statDocs">7</p>
+          <p class="text-slate-500 text-xs mt-0.5">Documents</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-purple-500 to-pink-500 w-2/3"></div></div>
+      </div>
+
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/25 flex items-center justify-center">
+            <i class="fas fa-gavel text-amber-400 text-sm"></i>
+          </div>
+          <span class="text-amber-400 text-xs font-semibold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse-slow"></span> Soon
+          </span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white" id="statHearings">2</p>
+          <p class="text-slate-500 text-xs mt-0.5">Upcoming Hearings</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-amber-400 to-orange-500 w-1/2"></div></div>
+      </div>
+
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-green-500/20 border border-green-500/25 flex items-center justify-center">
+            <i class="fas fa-file-pen text-green-400 text-sm"></i>
+          </div>
+          <span class="text-green-400 text-xs font-semibold">Generated</span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white" id="statDrafts">4</p>
+          <p class="text-slate-500 text-xs mt-0.5">Drafts Created</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-green-400 to-emerald-500 w-4/5"></div></div>
+      </div>
+    </div>
+
+    <!-- Middle Row: Quick Actions + Upcoming Hearing -->
+    <div class="grid lg:grid-cols-3 gap-6">
+
+      <!-- Quick Actions (2/3 width) -->
+      <div class="lg:col-span-2 glass rounded-2xl p-6 space-y-4">
+        <h2 class="text-white font-bold text-base">Quick Actions</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <a href="assistant.html" class="quick-action rounded-2xl p-4 flex flex-col items-center gap-3 text-center bg-white/[0.03] cursor-pointer">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center">
+              <i class="fas fa-robot text-indigo-400 text-lg"></i>
+            </div>
+            <div><p class="text-white text-sm font-semibold">Ask AI</p><p class="text-slate-500 text-xs mt-0.5">Legal question</p></div>
+          </a>
+          <a href="documents.html" class="quick-action rounded-2xl p-4 flex flex-col items-center gap-3 text-center bg-white/[0.03] cursor-pointer">
+            <div class="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/25 flex items-center justify-center">
+              <i class="fas fa-upload text-purple-400 text-lg"></i>
+            </div>
+            <div><p class="text-white text-sm font-semibold">Analyze Doc</p><p class="text-slate-500 text-xs mt-0.5">Upload & scan</p></div>
+          </a>
+          <a href="drafts.html" class="quick-action rounded-2xl p-4 flex flex-col items-center gap-3 text-center bg-white/[0.03] cursor-pointer">
+            <div class="w-12 h-12 rounded-2xl bg-pink-500/20 border border-pink-500/25 flex items-center justify-center">
+              <i class="fas fa-file-pen text-pink-400 text-lg"></i>
+            </div>
+            <div><p class="text-white text-sm font-semibold">Draft</p><p class="text-slate-500 text-xs mt-0.5">FIR / Notice</p></div>
+          </a>
+          <a href="planning.html" class="quick-action rounded-2xl p-4 flex flex-col items-center gap-3 text-center bg-white/[0.03] cursor-pointer">
+            <div class="w-12 h-12 rounded-2xl bg-green-500/20 border border-green-500/25 flex items-center justify-center">
+              <i class="fas fa-list-check text-green-400 text-lg"></i>
+            </div>
+            <div><p class="text-white text-sm font-semibold">Checklist</p><p class="text-slate-500 text-xs mt-0.5">Step-by-step</p></div>
+          </a>
+          <a href="planning.html#costs" class="quick-action rounded-2xl p-4 flex flex-col items-center gap-3 text-center bg-white/[0.03] cursor-pointer">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/25 flex items-center justify-center">
+              <i class="fas fa-calculator text-amber-400 text-lg"></i>
+            </div>
+            <div><p class="text-white text-sm font-semibold">Estimate</p><p class="text-slate-500 text-xs mt-0.5">Legal costs</p></div>
+          </a>
+          <a href="awareness.html" class="quick-action rounded-2xl p-4 flex flex-col items-center gap-3 text-center bg-white/[0.03] cursor-pointer">
+            <div class="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/25 flex items-center justify-center">
+              <i class="fas fa-book-open text-blue-400 text-lg"></i>
+            </div>
+            <div><p class="text-white text-sm font-semibold">Learn Rights</p><p class="text-slate-500 text-xs mt-0.5">Awareness hub</p></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Next Hearing Card -->
+      <div class="glass rounded-2xl p-6 space-y-4 flex flex-col"
+        style="background:linear-gradient(135deg,rgba(251,191,36,0.07),rgba(249,115,22,0.05)); border-color:rgba(251,191,36,0.15);">
+        <div class="flex items-center justify-between">
+          <h2 class="text-white font-bold text-base">Next Hearing</h2>
+          <span class="badge badge-hearing"><i class="fas fa-clock text-xs"></i> Tomorrow</span>
+        </div>
+        <div class="flex-1 space-y-4">
+          <div class="text-center py-3">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center mx-auto mb-3">
+              <i class="fas fa-gavel text-amber-400 text-2xl"></i>
+            </div>
+            <p class="text-white font-bold text-base">Rent Dispute — Delhi HC</p>
+            <p class="text-slate-400 text-sm mt-1">Case #LL-2025-089</p>
+          </div>
+          <div class="space-y-2.5">
+            <div class="flex items-center gap-3 text-sm">
+              <i class="fas fa-calendar-day text-amber-400 w-4 text-center text-xs"></i>
+              <span class="text-slate-300">6 March 2026, 10:30 AM</span>
+            </div>
+            <div class="flex items-center gap-3 text-sm">
+              <i class="fas fa-location-dot text-amber-400 w-4 text-center text-xs"></i>
+              <span class="text-slate-300">Court Room 4, Tis Hazari</span>
+            </div>
+            <div class="flex items-center gap-3 text-sm">
+              <i class="fas fa-user-tie text-amber-400 w-4 text-center text-xs"></i>
+              <span class="text-slate-300">Adv. Priya Singh</span>
+            </div>
+          </div>
+        </div>
+        <a href="hearings.html" class="glass rounded-xl py-2.5 text-center text-sm text-amber-300 hover:bg-amber-500/10 transition-all font-medium">
+          View All Hearings <i class="fas fa-arrow-right ml-1 text-xs"></i>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Cases Table + AI Insight side by side -->
+    <div class="grid lg:grid-cols-3 gap-6">
+
+      <!-- Cases Table -->
+      <div class="lg:col-span-2 glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 flex items-center justify-between border-b border-white/5">
+          <h2 class="text-white font-bold text-base">My Cases</h2>
+          <a href="cases.html" class="text-indigo-400 text-xs hover:text-indigo-300 transition-colors font-medium">View All <i class="fas fa-arrow-right ml-1"></i></a>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="px-6 py-3 flex gap-2 border-b border-white/5 overflow-x-auto">
+          <button onclick="filterCases('all')"     id="tab-all"     class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-500/20 text-indigo-300 transition-all whitespace-nowrap">All (3)</button>
+          <button onclick="filterCases('active')"  id="tab-active"  class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white transition-all whitespace-nowrap">Active (1)</button>
+          <button onclick="filterCases('pending')" id="tab-pending" class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white transition-all whitespace-nowrap">Pending (1)</button>
+          <button onclick="filterCases('closed')"  id="tab-closed"  class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white transition-all whitespace-nowrap">Closed (1)</button>
+        </div>
+
+        <div class="divide-y divide-white/5" id="casesContainer"></div>
+
+        <div class="px-6 py-4 border-t border-white/5 flex justify-center">
+          <button onclick="openNewCaseModal()" class="btn-primary px-6 py-2.5 rounded-xl text-white text-sm font-medium flex items-center gap-2">
+            <i class="fas fa-plus text-xs"></i> Open New Case
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Insight Panel -->
+      <div class="glass rounded-2xl p-6 flex flex-col space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center">
+            <i class="fas fa-robot text-indigo-400 text-sm"></i>
+          </div>
+          <div>
+            <h2 class="text-white font-bold text-sm">AI Insight</h2>
+            <p class="text-slate-500 text-xs">Personalized for your cases</p>
+          </div>
+        </div>
+
+        <div class="flex-1 space-y-3" id="aiInsights">
+          <!-- Injected by JS -->
+        </div>
+
+        <a href="assistant.html" class="btn-primary rounded-xl py-2.5 text-center text-sm text-white font-medium flex items-center justify-center gap-2">
+          <i class="fas fa-robot text-xs"></i> Ask AI Assistant
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent Activity + Document Risk -->
+    <div class="grid lg:grid-cols-2 gap-6">
+
+      <!-- Recent Activity -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <h2 class="text-white font-bold text-base">Recent Activity</h2>
+          <span class="text-slate-600 text-xs">Last 7 days</span>
+        </div>
+        <div class="p-6 space-y-1" id="activityList"></div>
+      </div>
+
+      <!-- Document Risk Overview -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <h2 class="text-white font-bold text-base">Document Risk Overview</h2>
+          <a href="documents.html" class="text-indigo-400 text-xs hover:text-indigo-300">Analyze More</a>
+        </div>
+        <div class="p-6 space-y-4" id="docRiskList"></div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     NEW CASE MODAL
+═══════════════════════════════════════════ -->
+<div id="newCaseModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeNewCaseModal()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-lg relative z-10 overflow-hidden animate-fade-up">
+    <div class="px-7 py-5 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-white font-bold text-lg">Open New Case</h3>
+      <button onclick="closeNewCaseModal()" class="text-slate-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-7 space-y-5">
+      <!-- Case Type -->
+      <div class="space-y-2">
+        <label class="text-slate-300 text-sm font-medium">Case Type</label>
+        <div class="grid grid-cols-3 gap-2" id="caseTypeGrid"></div>
+      </div>
+
+      <!-- Title -->
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Case Title</label>
+        <input id="caseTitle" type="text" placeholder="Brief title describing your issue"
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+      </div>
+
+      <!-- Description -->
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Description <span class="text-slate-600 text-xs">(optional)</span></label>
+        <textarea id="caseDesc" rows="3" placeholder="Briefly describe your situation..."
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+      </div>
+
+      <!-- Priority -->
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Priority</label>
+        <select id="casePriority" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+          <option value="low"    class="bg-slate-900">Low — No immediate urgency</option>
+          <option value="medium" class="bg-slate-900" selected>Medium — Needs attention soon</option>
+          <option value="high"   class="bg-slate-900">High — Urgent legal matter</option>
+        </select>
+      </div>
+
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeNewCaseModal()" class="flex-1 glass rounded-xl py-3 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium">Cancel</button>
+        <button onclick="submitNewCase()" class="flex-1 btn-primary rounded-xl py-3 text-sm text-white font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-folder-plus text-xs"></i> Open Case
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<!-- <script> -->
+<!-- // ── Session Guard -->
+<!-- const session = JSON.parse( -->
+<!--   localStorage.getItem('ll_session') || -->
+<!--   sessionStorage.getItem('ll_session') || 'null' -->
+<!-- ); -->
+<!-- if (!session || !session.token) { -->
+<!--   window.location.href = 'login.html'; -->
+<!-- } -->
+
+<!-- // ── Populate user info -->
+<!-- if (session) { -->
+<!--   const first = session.name?.split(' ')[0] || 'User'; -->
+<!--   const init  = session.name?.charAt(0).toUpperCase() || 'U'; -->
+<!--   document.getElementById('welcomeName').textContent  = first; -->
+<!--   document.getElementById('sidebarName').textContent  = session.name; -->
+<!--   document.getElementById('sidebarAvatar').textContent = init; -->
+<!--   document.getElementById('topAvatar').textContent     = init; -->
+<!-- } -->
+
+<!-- // ── Mock Data -->
+<!-- const MOCK_CASES = [ -->
+<!--   { id:'LL-2025-089', title:'Rent Deposit Dispute', type:'Property', status:'active',  lawyer:'Adv. Priya Singh', date:'15 Jan 2026', priority:'high'   }, -->
+<!--   { id:'LL-2025-102', title:'Consumer Complaint — Electronics', type:'Consumer', status:'pending', lawyer:'Unassigned',      date:'28 Jan 2026', priority:'medium' }, -->
+<!--   { id:'LL-2025-067', title:'Employment Termination', type:'Labour', status:'closed',  lawyer:'Adv. R. Mehta',   date:'10 Dec 2025', priority:'low'    }, -->
+<!-- ]; -->
+
+<!-- const MOCK_ACTIVITY = [ -->
+<!--   { icon:'fa-file-upload',    color:'text-indigo-400', text:'Document uploaded',            sub:'Rental Agreement.pdf',        time:'2h ago' }, -->
+<!--   { icon:'fa-robot',          color:'text-purple-400', text:'AI analysis completed',         sub:'Risk score: Medium (62%)',     time:'2h ago' }, -->
+<!--   { icon:'fa-gavel',          color:'text-amber-400',  text:'Hearing scheduled',             sub:'Case #LL-2025-089 — 6 Mar',   time:'1d ago' }, -->
+<!--   { icon:'fa-file-pen',       color:'text-green-400',  text:'Draft generated',               sub:'Legal Notice — Landlord',     time:'2d ago' }, -->
+<!--   { icon:'fa-user-tie',       color:'text-blue-400',   text:'Lawyer assigned',               sub:'Adv. Priya Singh',            time:'3d ago' }, -->
+<!--   { icon:'fa-folder-plus',    color:'text-pink-400',   text:'New case opened',               sub:'Rent Deposit Dispute',        time:'5d ago' }, -->
+<!-- ]; -->
+
+<!-- const MOCK_DOCS = [ -->
+<!--   { name:'Rental Agreement.pdf', risk:'medium', score:62, clauses:{ safe:3, review:5, critical:2 } }, -->
+<!--   { name:'Employment Contract.pdf', risk:'low', score:28, clauses:{ safe:8, review:2, critical:0 } }, -->
+<!--   { name:'Sale Deed Draft.pdf', risk:'high', score:84, clauses:{ safe:1, review:3, critical:4 } }, -->
+<!-- ]; -->
+
+<!-- const AI_INSIGHTS = [ -->
+<!--   { icon:'fa-triangle-exclamation', color:'text-amber-400 bg-amber-500/10 border-amber-500/20', title:'Hearing Tomorrow', body:'Prepare your rental receipts and correspondence with your landlord for Case #LL-2025-089.' }, -->
+<!--   { icon:'fa-lightbulb', color:'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', title:'Document Tip', body:'Your Sale Deed has 4 critical clauses. Review them before signing.' }, -->
+<!--   { icon:'fa-circle-info', color:'text-blue-400 bg-blue-500/10 border-blue-500/20', title:'Know Your Rights', body:'Under Consumer Protection Act 2019, you can claim up to ₹1 Cr in compensation.' }, -->
+<!-- ]; -->
+
+<!-- const MOCK_NOTIFICATIONS = [ -->
+<!--   { icon:'fa-gavel',       color:'text-amber-400',  title:'Hearing Tomorrow',      body:'Case #LL-2025-089 at 10:30 AM', time:'Just now',  unread:true  }, -->
+<!--   { icon:'fa-user-tie',    color:'text-indigo-400', title:'Lawyer Assigned',       body:'Adv. Priya Singh accepted',    time:'3h ago',    unread:true  }, -->
+<!--   { icon:'fa-check-circle',color:'text-green-400',  title:'Draft Ready',           body:'Legal Notice PDF is ready',    time:'1d ago',    unread:false }, -->
+<!--   { icon:'fa-robot',       color:'text-purple-400', title:'AI Analysis Done',      body:'Rental Agreement scanned',     time:'2d ago',    unread:false }, -->
+<!-- ]; -->
+
+<!-- const CASE_TYPES = [ -->
+<!--   { id:'property', icon:'🏠', label:'Property' }, -->
+<!--   { id:'consumer', icon:'🛒', label:'Consumer' }, -->
+<!--   { id:'family',   icon:'👨‍👩‍👧', label:'Family' }, -->
+<!--   { id:'criminal', icon:'⚖️', label:'Criminal' }, -->
+<!--   { id:'labour',   icon:'💼', label:'Labour' }, -->
+<!--   { id:'other',    icon:'📋', label:'Other' }, -->
+<!-- ]; -->
+
+<!-- let selectedCaseType  = 'property'; -->
+<!-- let activeCaseFilter  = 'all'; -->
+
+<!-- // ── Render Cases -->
+<!-- function renderCases(filter = 'all') { -->
+<!--   const container = document.getElementById('casesContainer'); -->
+<!--   const filtered  = filter === 'all' ? MOCK_CASES : MOCK_CASES.filter(c => c.status === filter); -->
+
+<!--   if (filtered.length === 0) { -->
+<!--     container.innerHTML = `<div class="px-6 py-10 text-center text-slate-500 text-sm">No ${filter} cases found.</div>`; -->
+<!--     return; -->
+<!--   } -->
+
+<!--   container.innerHTML = filtered.map(c => ` -->
+<!--     <div class="case-row px-6 py-4 flex items-center gap-4 cursor-pointer" onclick="window.location='cases.html'"> -->
+<!--       <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${ -->
+<!--         c.status === 'active'  ? 'bg-green-500/15  border border-green-500/25'  : -->
+<!--         c.status === 'pending' ? 'bg-amber-500/15  border border-amber-500/25'  : -->
+<!--                                   'bg-slate-500/15  border border-slate-500/25' -->
+<!--       }"> -->
+<!--         <i class="fas fa-folder text-sm ${ -->
+<!--           c.status === 'active' ? 'text-green-400' : c.status === 'pending' ? 'text-amber-400' : 'text-slate-400' -->
+<!--         }"></i> -->
+<!--       </div> -->
+<!--       <div class="flex-1 min-w-0"> -->
+<!--         <p class="text-white text-sm font-semibold truncate">${c.title}</p> -->
+<!--         <p class="text-slate-500 text-xs mt-0.5">#${c.id} · ${c.type} · ${c.lawyer}</p> -->
+<!--       </div> -->
+<!--       <div class="flex-shrink-0 text-right space-y-1"> -->
+<!--         <span class="badge ${ -->
+<!--           c.status === 'active'  ? 'badge-active'  : -->
+<!--           c.status === 'pending' ? 'badge-pending' : 'badge-closed' -->
+<!--         }">${c.status.charAt(0).toUpperCase() + c.status.slice(1)}</span> -->
+<!--         <p class="text-slate-600 text-xs">${c.date}</p> -->
+<!--       </div> -->
+<!--     </div> -->
+<!--   `).join(''); -->
+<!-- } -->
+
+<!-- // ── Filter Cases -->
+<!-- function filterCases(filter) { -->
+<!--   activeCaseFilter = filter; -->
+<!--   document.querySelectorAll('.case-tab').forEach(btn => { -->
+<!--     btn.classList.remove('bg-indigo-500/20','text-indigo-300'); -->
+<!--     btn.classList.add('text-slate-500'); -->
+<!--   }); -->
+<!--   const active = document.getElementById('tab-' + filter); -->
+<!--   if (active) { -->
+<!--     active.classList.add('bg-indigo-500/20','text-indigo-300'); -->
+<!--     active.classList.remove('text-slate-500'); -->
+<!--   } -->
+<!--   renderCases(filter); -->
+<!-- } -->
+
+<!-- // ── Render Activity -->
+<!-- function renderActivity() { -->
+<!--   document.getElementById('activityList').innerHTML = MOCK_ACTIVITY.map(a => ` -->
+<!--     <div class="flex items-start gap-3 py-2.5"> -->
+<!--       <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5"> -->
+<!--         <i class="fas ${a.icon} text-xs ${a.color}"></i> -->
+<!--       </div> -->
+<!--       <div class="flex-1 min-w-0"> -->
+<!--         <p class="text-slate-300 text-sm font-medium">${a.text}</p> -->
+<!--         <p class="text-slate-600 text-xs truncate">${a.sub}</p> -->
+<!--       </div> -->
+<!--       <span class="text-slate-600 text-xs flex-shrink-0">${a.time}</span> -->
+<!--     </div> -->
+<!--   `).join(''); -->
+<!-- } -->
+
+<!-- // ── Render Doc Risk -->
+<!-- function renderDocRisk() { -->
+<!--   document.getElementById('docRiskList').innerHTML = MOCK_DOCS.map(d => { -->
+<!--     const riskColor = d.risk === 'high' ? 'text-red-400' : d.risk === 'medium' ? 'text-amber-400' : 'text-green-400'; -->
+<!--     const barColor  = d.risk === 'high' ? 'from-red-500 to-rose-600' : d.risk === 'medium' ? 'from-amber-400 to-orange-500' : 'from-green-400 to-emerald-500'; -->
+<!--     return ` -->
+<!--       <div class="space-y-2"> -->
+<!--         <div class="flex items-center justify-between"> -->
+<!--           <p class="text-slate-300 text-sm font-medium truncate pr-2">${d.name}</p> -->
+<!--           <span class="text-xs font-semibold ${riskColor} flex-shrink-0">${d.risk.charAt(0).toUpperCase()+d.risk.slice(1)} Risk</span> -->
+<!--         </div> -->
+<!--         <div class="progress-bar"> -->
+<!--           <div class="progress-fill bg-gradient-to-r ${barColor}" style="width:${d.score}%"></div> -->
+<!--         </div> -->
+<!--         <div class="flex gap-3 text-xs"> -->
+<!--           <span class="text-green-400">${d.clauses.safe} safe</span> -->
+<!--           <span class="text-amber-400">${d.clauses.review} review</span> -->
+<!--           <span class="text-red-400">${d.clauses.critical} critical</span> -->
+<!--         </div> -->
+<!--       </div> -->
+<!--     `; -->
+<!--   }).join('<div class="border-t border-white/5 my-1"></div>'); -->
+<!-- } -->
+
+<!-- // ── Render AI Insights -->
+<!-- function renderAIInsights() { -->
+<!--   document.getElementById('aiInsights').innerHTML = AI_INSIGHTS.map(i => ` -->
+<!--     <div class="glass rounded-xl p-3.5 border ${i.color.split(' ').slice(1).join(' ')} space-y-1"> -->
+<!--       <div class="flex items-center gap-2"> -->
+<!--         <i class="fas ${i.icon} text-xs ${i.color.split(' ')[0]}"></i> -->
+<!--         <p class="text-white text-xs font-semibold">${i.title}</p> -->
+<!--       </div> -->
+<!--       <p class="text-slate-400 text-xs leading-relaxed">${i.body}</p> -->
+<!--     </div> -->
+<!--   `).join(''); -->
+<!-- } -->
+
+<!-- // ── Render Notifications -->
+<!-- function renderNotifications() { -->
+<!--   document.getElementById('notifList').innerHTML = MOCK_NOTIFICATIONS.map(n => ` -->
+<!--     <div class="px-5 py-3.5 flex items-start gap-3 hover:bg-white/4 transition-colors ${n.unread ? 'bg-white/[0.02]' : ''}"> -->
+<!--       <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5"> -->
+<!--         <i class="fas ${n.icon} text-xs ${n.color}"></i> -->
+<!--       </div> -->
+<!--       <div class="flex-1 min-w-0"> -->
+<!--         <p class="text-white text-xs font-semibold">${n.title}</p> -->
+<!--         <p class="text-slate-500 text-xs truncate">${n.body}</p> -->
+<!--         <p class="text-slate-700 text-xs mt-0.5">${n.time}</p> -->
+<!--       </div> -->
+<!--       ${n.unread ? '<div class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1.5"></div>' : ''} -->
+<!--     </div> -->
+<!--   `).join(''); -->
+<!-- } -->
+
+<!-- // ── Render Case Type Grid (Modal) -->
+<!-- function renderCaseTypes() { -->
+<!--   document.getElementById('caseTypeGrid').innerHTML = CASE_TYPES.map(t => ` -->
+<!--     <button onclick="selectCaseType('${t.id}')" id="ct-${t.id}" -->
+<!--       class="case-type-btn glass rounded-xl p-3 flex flex-col items-center gap-1.5 text-center transition-all hover:bg-indigo-500/10 ${t.id === selectedCaseType ? 'border-indigo-500 bg-indigo-500/15 text-white' : 'text-slate-400'}"> -->
+<!--       <span class="text-lg">${t.icon}</span> -->
+<!--       <span class="text-xs font-medium">${t.label}</span> -->
+<!--     </button> -->
+<!--   `).join(''); -->
+<!-- } -->
+
+<!-- function selectCaseType(id) { -->
+<!--   selectedCaseType = id; -->
+<!--   document.querySelectorAll('.case-type-btn').forEach(btn => { -->
+<!--     btn.classList.remove('border-indigo-500','bg-indigo-500/15','text-white'); -->
+<!--     btn.classList.add('text-slate-400'); -->
+<!--   }); -->
+<!--   const el = document.getElementById('ct-' + id); -->
+<!--   el.classList.add('border-indigo-500','bg-indigo-500/15','text-white'); -->
+<!--   el.classList.remove('text-slate-400'); -->
+<!-- } -->
+
+<!-- // ── Modal Controls -->
+<!-- function openNewCaseModal() { -->
+<!--   renderCaseTypes(); -->
+<!--   document.getElementById('newCaseModal').classList.remove('hidden'); -->
+<!-- } -->
+<!-- function closeNewCaseModal() { -->
+<!--   document.getElementById('newCaseModal').classList.add('hidden'); -->
+<!-- } -->
+
+<!-- async function submitNewCase() { -->
+<!--   const title = document.getElementById('caseTitle').value.trim(); -->
+<!--   if (!title) { -->
+<!--     document.getElementById('caseTitle').focus(); -->
+<!--     document.getElementById('caseTitle').style.borderColor = '#ef4444'; -->
+<!--     return; -->
+<!--   } -->
+<!--   // Mock success — in Phase 5 this calls POST /api/v1/cases -->
+<!--   closeNewCaseModal(); -->
+<!--   const newCase = { -->
+<!--     id: 'LL-2026-' + Math.floor(Math.random()*900+100), -->
+<!--     title, type: CASE_TYPES.find(t=>t.id===selectedCaseType)?.label || 'Other', -->
+<!--     status:'pending', lawyer:'Unassigned', -->
+<!--     date: new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), -->
+<!--     priority: document.getElementById('casePriority').value, -->
+<!--   }; -->
+<!--   MOCK_CASES.unshift(newCase); -->
+<!--   document.getElementById('statCases').textContent = MOCK_CASES.length; -->
+<!--   renderCases(activeCaseFilter); -->
+<!--   // Toast -->
+<!--   showToast('Case opened successfully!', 'success'); -->
+<!-- } -->
+
+<!-- // ── Notifications toggle -->
+<!-- function toggleNotifications() { -->
+<!--   const d = document.getElementById('notifDropdown'); -->
+<!--   d.classList.toggle('hidden'); -->
+<!-- } -->
+<!-- document.addEventListener('click', (e) => { -->
+<!--   if (!e.target.closest('#notifDropdown') && !e.target.closest('button[onclick="toggleNotifications()"]')) { -->
+<!--     document.getElementById('notifDropdown')?.classList.add('hidden'); -->
+<!--   } -->
+<!-- }); -->
+
+<!-- // ── Sidebar toggle (mobile) -->
+<!-- function toggleSidebar() { -->
+<!--   const sidebar  = document.getElementById('sidebar'); -->
+<!--   const overlay  = document.getElementById('sidebarOverlay'); -->
+<!--   const isOpen   = !sidebar.classList.contains('-translate-x-full'); -->
+<!--   sidebar.classList.toggle('-translate-x-full', isOpen); -->
+<!--   overlay.classList.toggle('hidden', isOpen); -->
+<!-- } -->
+
+<!-- // ── Logout -->
+<!-- function handleLogout() { -->
+<!--   localStorage.removeItem('ll_session'); -->
+<!--   sessionStorage.removeItem('ll_session'); -->
+<!--   window.location.href = 'login.html'; -->
+<!-- } -->
+
+<!-- // ── Toast notification -->
+<!-- function showToast(msg, type = 'success') { -->
+<!--   const toast = document.createElement('div'); -->
+<!--   toast.className = `fixed bottom-6 right-6 z-50 glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type === 'success' ? 'border-green-500/30' : 'border-red-500/30'}`; -->
+<!--   toast.innerHTML = ` -->
+<!--     <i class="fas ${type === 'success' ? 'fa-check-circle text-green-400' : 'fa-circle-exclamation text-red-400'}"></i> -->
+<!--     <span class="text-white text-sm font-medium">${msg}</span> -->
+<!--   `; -->
+<!--   document.body.appendChild(toast); -->
+<!--   setTimeout(() => toast.remove(), 3500); -->
+<!-- } -->
+
+<!-- // ── Greeting based on time -->
+<!-- function setGreeting() { -->
+<!--   const h = new Date().getHours(); -->
+<!--   const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; -->
+<!--   document.querySelector('.glass.rounded-2xl h1').innerHTML = -->
+<!--     `${greet}, <span id="welcomeName" class="gradient-text">${session?.name?.split(' ')[0] || 'User'}</span> 👋`; -->
+<!-- } -->
+
+<!-- // ── Init -->
+<!-- renderCases(); -->
+<!-- renderActivity(); -->
+<!-- renderDocRisk(); -->
+<!-- renderAIInsights(); -->
+<!-- renderNotifications(); -->
+<!-- setGreeting(); -->
+<!-- </script> -->
+</body>
+</html>
