@@ -502,302 +502,303 @@
 <!-- ═══════════════════════════════════════════
      JAVASCRIPT
 ═══════════════════════════════════════════ -->
-<!-- <script> -->
-<!-- // ── Session Guard -->
-<!-- const session = JSON.parse( -->
-<!--   localStorage.getItem('ll_session') || -->
-<!--   sessionStorage.getItem('ll_session') || 'null' -->
-<!-- ); -->
-<!-- if (!session || !session.token) { -->
-<!--   window.location.href = 'login.html'; -->
-<!-- } -->
+<script>
+// ── Session Guard
+const session = JSON.parse(
+  localStorage.getItem('ll_session') ||
+  sessionStorage.getItem('ll_session') || 'null'
+);
+if (!session || !session.token) {
+  window.location.href = 'login.html';
+}
 
-<!-- // ── Populate user info -->
-<!-- if (session) { -->
-<!--   const first = session.name?.split(' ')[0] || 'User'; -->
-<!--   const init  = session.name?.charAt(0).toUpperCase() || 'U'; -->
-<!--   document.getElementById('welcomeName').textContent  = first; -->
-<!--   document.getElementById('sidebarName').textContent  = session.name; -->
-<!--   document.getElementById('sidebarAvatar').textContent = init; -->
-<!--   document.getElementById('topAvatar').textContent     = init; -->
-<!-- } -->
+// ── Populate user info
+if (session) {
+  const first = session.name?.split(' ')[0] || 'User';
+  const init  = session.name?.charAt(0).toUpperCase() || 'U';
+  document.getElementById('welcomeName').textContent  = first;
+  document.getElementById('sidebarName').textContent  = session.name;
+  document.getElementById('sidebarAvatar').textContent = init;
+  document.getElementById('topAvatar').textContent     = init;
+}
 
-<!-- // ── Mock Data -->
-<!-- const MOCK_CASES = [ -->
-<!--   { id:'LL-2025-089', title:'Rent Deposit Dispute', type:'Property', status:'active',  lawyer:'Adv. Priya Singh', date:'15 Jan 2026', priority:'high'   }, -->
-<!--   { id:'LL-2025-102', title:'Consumer Complaint — Electronics', type:'Consumer', status:'pending', lawyer:'Unassigned',      date:'28 Jan 2026', priority:'medium' }, -->
-<!--   { id:'LL-2025-067', title:'Employment Termination', type:'Labour', status:'closed',  lawyer:'Adv. R. Mehta',   date:'10 Dec 2025', priority:'low'    }, -->
-<!-- ]; -->
+// ── Mock Data
+const MOCK_CASES = [
+  { id:'LL-2025-089', title:'Rent Deposit Dispute', type:'Property', status:'active',  lawyer:'Adv. Priya Singh', date:'15 Jan 2026', priority:'high'   },
+  { id:'LL-2025-102', title:'Consumer Complaint — Electronics', type:'Consumer', status:'pending', lawyer:'Unassigned',      date:'28 Jan 2026', priority:'medium' },
+  { id:'LL-2025-067', title:'Employment Termination', type:'Labour', status:'closed',  lawyer:'Adv. R. Mehta',   date:'10 Dec 2025', priority:'low'    },
+];
 
-<!-- const MOCK_ACTIVITY = [ -->
-<!--   { icon:'fa-file-upload',    color:'text-indigo-400', text:'Document uploaded',            sub:'Rental Agreement.pdf',        time:'2h ago' }, -->
-<!--   { icon:'fa-robot',          color:'text-purple-400', text:'AI analysis completed',         sub:'Risk score: Medium (62%)',     time:'2h ago' }, -->
-<!--   { icon:'fa-gavel',          color:'text-amber-400',  text:'Hearing scheduled',             sub:'Case #LL-2025-089 — 6 Mar',   time:'1d ago' }, -->
-<!--   { icon:'fa-file-pen',       color:'text-green-400',  text:'Draft generated',               sub:'Legal Notice — Landlord',     time:'2d ago' }, -->
-<!--   { icon:'fa-user-tie',       color:'text-blue-400',   text:'Lawyer assigned',               sub:'Adv. Priya Singh',            time:'3d ago' }, -->
-<!--   { icon:'fa-folder-plus',    color:'text-pink-400',   text:'New case opened',               sub:'Rent Deposit Dispute',        time:'5d ago' }, -->
-<!-- ]; -->
+const MOCK_ACTIVITY = [
+  { icon:'fa-file-upload',    color:'text-indigo-400', text:'Document uploaded',            sub:'Rental Agreement.pdf',        time:'2h ago' },
+  { icon:'fa-robot',          color:'text-purple-400', text:'AI analysis completed',         sub:'Risk score: Medium (62%)',     time:'2h ago' },
+  { icon:'fa-gavel',          color:'text-amber-400',  text:'Hearing scheduled',             sub:'Case #LL-2025-089 — 6 Mar',   time:'1d ago' },
+  { icon:'fa-file-pen',       color:'text-green-400',  text:'Draft generated',               sub:'Legal Notice — Landlord',     time:'2d ago' },
+  { icon:'fa-user-tie',       color:'text-blue-400',   text:'Lawyer assigned',               sub:'Adv. Priya Singh',            time:'3d ago' },
+  { icon:'fa-folder-plus',    color:'text-pink-400',   text:'New case opened',               sub:'Rent Deposit Dispute',        time:'5d ago' },
+];
 
-<!-- const MOCK_DOCS = [ -->
-<!--   { name:'Rental Agreement.pdf', risk:'medium', score:62, clauses:{ safe:3, review:5, critical:2 } }, -->
-<!--   { name:'Employment Contract.pdf', risk:'low', score:28, clauses:{ safe:8, review:2, critical:0 } }, -->
-<!--   { name:'Sale Deed Draft.pdf', risk:'high', score:84, clauses:{ safe:1, review:3, critical:4 } }, -->
-<!-- ]; -->
+const MOCK_DOCS = [
+  { name:'Rental Agreement.pdf', risk:'medium', score:62, clauses:{ safe:3, review:5, critical:2 } },
+  { name:'Employment Contract.pdf', risk:'low', score:28, clauses:{ safe:8, review:2, critical:0 } },
+  { name:'Sale Deed Draft.pdf', risk:'high', score:84, clauses:{ safe:1, review:3, critical:4 } },
+];
 
-<!-- const AI_INSIGHTS = [ -->
-<!--   { icon:'fa-triangle-exclamation', color:'text-amber-400 bg-amber-500/10 border-amber-500/20', title:'Hearing Tomorrow', body:'Prepare your rental receipts and correspondence with your landlord for Case #LL-2025-089.' }, -->
-<!--   { icon:'fa-lightbulb', color:'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', title:'Document Tip', body:'Your Sale Deed has 4 critical clauses. Review them before signing.' }, -->
-<!--   { icon:'fa-circle-info', color:'text-blue-400 bg-blue-500/10 border-blue-500/20', title:'Know Your Rights', body:'Under Consumer Protection Act 2019, you can claim up to ₹1 Cr in compensation.' }, -->
-<!-- ]; -->
+const AI_INSIGHTS = [
+  { icon:'fa-triangle-exclamation', color:'text-amber-400 bg-amber-500/10 border-amber-500/20', title:'Hearing Tomorrow', body:'Prepare your rental receipts and correspondence with your landlord for Case #LL-2025-089.' },
+  { icon:'fa-lightbulb', color:'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', title:'Document Tip', body:'Your Sale Deed has 4 critical clauses. Review them before signing.' },
+  { icon:'fa-circle-info', color:'text-blue-400 bg-blue-500/10 border-blue-500/20', title:'Know Your Rights', body:'Under Consumer Protection Act 2019, you can claim up to ₹1 Cr in compensation.' },
+];
 
-<!-- const MOCK_NOTIFICATIONS = [ -->
-<!--   { icon:'fa-gavel',       color:'text-amber-400',  title:'Hearing Tomorrow',      body:'Case #LL-2025-089 at 10:30 AM', time:'Just now',  unread:true  }, -->
-<!--   { icon:'fa-user-tie',    color:'text-indigo-400', title:'Lawyer Assigned',       body:'Adv. Priya Singh accepted',    time:'3h ago',    unread:true  }, -->
-<!--   { icon:'fa-check-circle',color:'text-green-400',  title:'Draft Ready',           body:'Legal Notice PDF is ready',    time:'1d ago',    unread:false }, -->
-<!--   { icon:'fa-robot',       color:'text-purple-400', title:'AI Analysis Done',      body:'Rental Agreement scanned',     time:'2d ago',    unread:false }, -->
-<!-- ]; -->
+const MOCK_NOTIFICATIONS = [
+  { icon:'fa-gavel',       color:'text-amber-400',  title:'Hearing Tomorrow',      body:'Case #LL-2025-089 at 10:30 AM', time:'Just now',  unread:true  },
+  { icon:'fa-user-tie',    color:'text-indigo-400', title:'Lawyer Assigned',       body:'Adv. Priya Singh accepted',    time:'3h ago',    unread:true  },
+  { icon:'fa-check-circle',color:'text-green-400',  title:'Draft Ready',           body:'Legal Notice PDF is ready',    time:'1d ago',    unread:false },
+  { icon:'fa-robot',       color:'text-purple-400', title:'AI Analysis Done',      body:'Rental Agreement scanned',     time:'2d ago',    unread:false },
+];
 
-<!-- const CASE_TYPES = [ -->
-<!--   { id:'property', icon:'🏠', label:'Property' }, -->
-<!--   { id:'consumer', icon:'🛒', label:'Consumer' }, -->
-<!--   { id:'family',   icon:'👨‍👩‍👧', label:'Family' }, -->
-<!--   { id:'criminal', icon:'⚖️', label:'Criminal' }, -->
-<!--   { id:'labour',   icon:'💼', label:'Labour' }, -->
-<!--   { id:'other',    icon:'📋', label:'Other' }, -->
-<!-- ]; -->
+const CASE_TYPES = [
+  { id:'property', icon:'🏠', label:'Property' },
+  { id:'consumer', icon:'🛒', label:'Consumer' },
+  { id:'family',   icon:'👨‍👩‍👧', label:'Family' },
+  { id:'criminal', icon:'⚖️', label:'Criminal' },
+  { id:'labour',   icon:'💼', label:'Labour' },
+  { id:'other',    icon:'📋', label:'Other' },
+];
 
-<!-- let selectedCaseType  = 'property'; -->
-<!-- let activeCaseFilter  = 'all'; -->
+let selectedCaseType  = 'property';
+let activeCaseFilter  = 'all';
 
-<!-- // ── Render Cases -->
-<!-- function renderCases(filter = 'all') { -->
-<!--   const container = document.getElementById('casesContainer'); -->
-<!--   const filtered  = filter === 'all' ? MOCK_CASES : MOCK_CASES.filter(c => c.status === filter); -->
+// ── Render Cases
+function renderCases(filter = 'all') {
+  const container = document.getElementById('casesContainer');
+  const filtered  = filter === 'all' ? MOCK_CASES : MOCK_CASES.filter(c => c.status === filter);
 
-<!--   if (filtered.length === 0) { -->
-<!--     container.innerHTML = `<div class="px-6 py-10 text-center text-slate-500 text-sm">No ${filter} cases found.</div>`; -->
-<!--     return; -->
-<!--   } -->
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="px-6 py-10 text-center text-slate-500 text-sm">No ${filter} cases found.</div>`;
+    return;
+  }
 
-<!--   container.innerHTML = filtered.map(c => ` -->
-<!--     <div class="case-row px-6 py-4 flex items-center gap-4 cursor-pointer" onclick="window.location='cases.html'"> -->
-<!--       <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${ -->
-<!--         c.status === 'active'  ? 'bg-green-500/15  border border-green-500/25'  : -->
-<!--         c.status === 'pending' ? 'bg-amber-500/15  border border-amber-500/25'  : -->
-<!--                                   'bg-slate-500/15  border border-slate-500/25' -->
-<!--       }"> -->
-<!--         <i class="fas fa-folder text-sm ${ -->
-<!--           c.status === 'active' ? 'text-green-400' : c.status === 'pending' ? 'text-amber-400' : 'text-slate-400' -->
-<!--         }"></i> -->
-<!--       </div> -->
-<!--       <div class="flex-1 min-w-0"> -->
-<!--         <p class="text-white text-sm font-semibold truncate">${c.title}</p> -->
-<!--         <p class="text-slate-500 text-xs mt-0.5">#${c.id} · ${c.type} · ${c.lawyer}</p> -->
-<!--       </div> -->
-<!--       <div class="flex-shrink-0 text-right space-y-1"> -->
-<!--         <span class="badge ${ -->
-<!--           c.status === 'active'  ? 'badge-active'  : -->
-<!--           c.status === 'pending' ? 'badge-pending' : 'badge-closed' -->
-<!--         }">${c.status.charAt(0).toUpperCase() + c.status.slice(1)}</span> -->
-<!--         <p class="text-slate-600 text-xs">${c.date}</p> -->
-<!--       </div> -->
-<!--     </div> -->
-<!--   `).join(''); -->
-<!-- } -->
+  container.innerHTML = filtered.map(c => `
+    <div class="case-row px-6 py-4 flex items-center gap-4 cursor-pointer" onclick="window.location='cases.html'">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        c.status === 'active'  ? 'bg-green-500/15  border border-green-500/25'  :
+        c.status === 'pending' ? 'bg-amber-500/15  border border-amber-500/25'  :
+                                  'bg-slate-500/15  border border-slate-500/25'
+      }">
+        <i class="fas fa-folder text-sm ${
+          c.status === 'active' ? 'text-green-400' : c.status === 'pending' ? 'text-amber-400' : 'text-slate-400'
+        }"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold truncate">${c.title}</p>
+        <p class="text-slate-500 text-xs mt-0.5">#${c.id} · ${c.type} · ${c.lawyer}</p>
+      </div>
+      <div class="flex-shrink-0 text-right space-y-1">
+        <span class="badge ${
+          c.status === 'active'  ? 'badge-active'  :
+          c.status === 'pending' ? 'badge-pending' : 'badge-closed'
+        }">${c.status.charAt(0).toUpperCase() + c.status.slice(1)}</span>
+        <p class="text-slate-600 text-xs">${c.date}</p>
+      </div>
+    </div>
+  `).join('');
+}
 
-<!-- // ── Filter Cases -->
-<!-- function filterCases(filter) { -->
-<!--   activeCaseFilter = filter; -->
-<!--   document.querySelectorAll('.case-tab').forEach(btn => { -->
-<!--     btn.classList.remove('bg-indigo-500/20','text-indigo-300'); -->
-<!--     btn.classList.add('text-slate-500'); -->
-<!--   }); -->
-<!--   const active = document.getElementById('tab-' + filter); -->
-<!--   if (active) { -->
-<!--     active.classList.add('bg-indigo-500/20','text-indigo-300'); -->
-<!--     active.classList.remove('text-slate-500'); -->
-<!--   } -->
-<!--   renderCases(filter); -->
-<!-- } -->
+// ── Filter Cases
+function filterCases(filter) {
+  activeCaseFilter = filter;
+  document.querySelectorAll('.case-tab').forEach(btn => {
+    btn.classList.remove('bg-indigo-500/20','text-indigo-300');
+    btn.classList.add('text-slate-500');
+  });
+  const active = document.getElementById('tab-' + filter);
+  if (active) {
+    active.classList.add('bg-indigo-500/20','text-indigo-300');
+    active.classList.remove('text-slate-500');
+  }
+  renderCases(filter);
+}
 
-<!-- // ── Render Activity -->
-<!-- function renderActivity() { -->
-<!--   document.getElementById('activityList').innerHTML = MOCK_ACTIVITY.map(a => ` -->
-<!--     <div class="flex items-start gap-3 py-2.5"> -->
-<!--       <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5"> -->
-<!--         <i class="fas ${a.icon} text-xs ${a.color}"></i> -->
-<!--       </div> -->
-<!--       <div class="flex-1 min-w-0"> -->
-<!--         <p class="text-slate-300 text-sm font-medium">${a.text}</p> -->
-<!--         <p class="text-slate-600 text-xs truncate">${a.sub}</p> -->
-<!--       </div> -->
-<!--       <span class="text-slate-600 text-xs flex-shrink-0">${a.time}</span> -->
-<!--     </div> -->
-<!--   `).join(''); -->
-<!-- } -->
+// ── Render Activity
+function renderActivity() {
+  document.getElementById('activityList').innerHTML = MOCK_ACTIVITY.map(a => `
+    <div class="flex items-start gap-3 py-2.5">
+      <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i class="fas ${a.icon} text-xs ${a.color}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-slate-300 text-sm font-medium">${a.text}</p>
+        <p class="text-slate-600 text-xs truncate">${a.sub}</p>
+      </div>
+      <span class="text-slate-600 text-xs flex-shrink-0">${a.time}</span>
+    </div>
+  `).join('');
+}
 
-<!-- // ── Render Doc Risk -->
-<!-- function renderDocRisk() { -->
-<!--   document.getElementById('docRiskList').innerHTML = MOCK_DOCS.map(d => { -->
-<!--     const riskColor = d.risk === 'high' ? 'text-red-400' : d.risk === 'medium' ? 'text-amber-400' : 'text-green-400'; -->
-<!--     const barColor  = d.risk === 'high' ? 'from-red-500 to-rose-600' : d.risk === 'medium' ? 'from-amber-400 to-orange-500' : 'from-green-400 to-emerald-500'; -->
-<!--     return ` -->
-<!--       <div class="space-y-2"> -->
-<!--         <div class="flex items-center justify-between"> -->
-<!--           <p class="text-slate-300 text-sm font-medium truncate pr-2">${d.name}</p> -->
-<!--           <span class="text-xs font-semibold ${riskColor} flex-shrink-0">${d.risk.charAt(0).toUpperCase()+d.risk.slice(1)} Risk</span> -->
-<!--         </div> -->
-<!--         <div class="progress-bar"> -->
-<!--           <div class="progress-fill bg-gradient-to-r ${barColor}" style="width:${d.score}%"></div> -->
-<!--         </div> -->
-<!--         <div class="flex gap-3 text-xs"> -->
-<!--           <span class="text-green-400">${d.clauses.safe} safe</span> -->
-<!--           <span class="text-amber-400">${d.clauses.review} review</span> -->
-<!--           <span class="text-red-400">${d.clauses.critical} critical</span> -->
-<!--         </div> -->
-<!--       </div> -->
-<!--     `; -->
-<!--   }).join('<div class="border-t border-white/5 my-1"></div>'); -->
-<!-- } -->
+// ── Render Doc Risk
+function renderDocRisk() {
+  document.getElementById('docRiskList').innerHTML = MOCK_DOCS.map(d => {
+    const riskColor = d.risk === 'high' ? 'text-red-400' : d.risk === 'medium' ? 'text-amber-400' : 'text-green-400';
+    const barColor  = d.risk === 'high' ? 'from-red-500 to-rose-600' : d.risk === 'medium' ? 'from-amber-400 to-orange-500' : 'from-green-400 to-emerald-500';
+    return `
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <p class="text-slate-300 text-sm font-medium truncate pr-2">${d.name}</p>
+          <span class="text-xs font-semibold ${riskColor} flex-shrink-0">${d.risk.charAt(0).toUpperCase()+d.risk.slice(1)} Risk</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill bg-gradient-to-r ${barColor}" style="width:${d.score}%"></div>
+        </div>
+        <div class="flex gap-3 text-xs">
+          <span class="text-green-400">${d.clauses.safe} safe</span>
+          <span class="text-amber-400">${d.clauses.review} review</span>
+          <span class="text-red-400">${d.clauses.critical} critical</span>
+        </div>
+      </div>
+    `;
+  }).join('<div class="border-t border-white/5 my-1"></div>');
+}
 
-<!-- // ── Render AI Insights -->
-<!-- function renderAIInsights() { -->
-<!--   document.getElementById('aiInsights').innerHTML = AI_INSIGHTS.map(i => ` -->
-<!--     <div class="glass rounded-xl p-3.5 border ${i.color.split(' ').slice(1).join(' ')} space-y-1"> -->
-<!--       <div class="flex items-center gap-2"> -->
-<!--         <i class="fas ${i.icon} text-xs ${i.color.split(' ')[0]}"></i> -->
-<!--         <p class="text-white text-xs font-semibold">${i.title}</p> -->
-<!--       </div> -->
-<!--       <p class="text-slate-400 text-xs leading-relaxed">${i.body}</p> -->
-<!--     </div> -->
-<!--   `).join(''); -->
-<!-- } -->
+// ── Render AI Insights
+function renderAIInsights() {
+  document.getElementById('aiInsights').innerHTML = AI_INSIGHTS.map(i => `
+    <div class="glass rounded-xl p-3.5 border ${i.color.split(' ').slice(1).join(' ')} space-y-1">
+      <div class="flex items-center gap-2">
+        <i class="fas ${i.icon} text-xs ${i.color.split(' ')[0]}"></i>
+        <p class="text-white text-xs font-semibold">${i.title}</p>
+      </div>
+      <p class="text-slate-400 text-xs leading-relaxed">${i.body}</p>
+    </div>
+  `).join('');
+}
 
-<!-- // ── Render Notifications -->
-<!-- function renderNotifications() { -->
-<!--   document.getElementById('notifList').innerHTML = MOCK_NOTIFICATIONS.map(n => ` -->
-<!--     <div class="px-5 py-3.5 flex items-start gap-3 hover:bg-white/4 transition-colors ${n.unread ? 'bg-white/[0.02]' : ''}"> -->
-<!--       <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5"> -->
-<!--         <i class="fas ${n.icon} text-xs ${n.color}"></i> -->
-<!--       </div> -->
-<!--       <div class="flex-1 min-w-0"> -->
-<!--         <p class="text-white text-xs font-semibold">${n.title}</p> -->
-<!--         <p class="text-slate-500 text-xs truncate">${n.body}</p> -->
-<!--         <p class="text-slate-700 text-xs mt-0.5">${n.time}</p> -->
-<!--       </div> -->
-<!--       ${n.unread ? '<div class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1.5"></div>' : ''} -->
-<!--     </div> -->
-<!--   `).join(''); -->
-<!-- } -->
+// ── Render Notifications
+function renderNotifications() {
+  document.getElementById('notifList').innerHTML = MOCK_NOTIFICATIONS.map(n => `
+    <div class="px-5 py-3.5 flex items-start gap-3 hover:bg-white/4 transition-colors ${n.unread ? 'bg-white/[0.02]' : ''}">
+      <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i class="fas ${n.icon} text-xs ${n.color}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-xs font-semibold">${n.title}</p>
+        <p class="text-slate-500 text-xs truncate">${n.body}</p>
+        <p class="text-slate-700 text-xs mt-0.5">${n.time}</p>
+      </div>
+      ${n.unread ? '<div class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1.5"></div>' : ''}
+    </div>
+  `).join('');
+}
 
-<!-- // ── Render Case Type Grid (Modal) -->
-<!-- function renderCaseTypes() { -->
-<!--   document.getElementById('caseTypeGrid').innerHTML = CASE_TYPES.map(t => ` -->
-<!--     <button onclick="selectCaseType('${t.id}')" id="ct-${t.id}" -->
-<!--       class="case-type-btn glass rounded-xl p-3 flex flex-col items-center gap-1.5 text-center transition-all hover:bg-indigo-500/10 ${t.id === selectedCaseType ? 'border-indigo-500 bg-indigo-500/15 text-white' : 'text-slate-400'}"> -->
-<!--       <span class="text-lg">${t.icon}</span> -->
-<!--       <span class="text-xs font-medium">${t.label}</span> -->
-<!--     </button> -->
-<!--   `).join(''); -->
-<!-- } -->
+// ── Render Case Type Grid (Modal)
+function renderCaseTypes() {
+  document.getElementById('caseTypeGrid').innerHTML = CASE_TYPES.map(t => `
+    <button onclick="selectCaseType('${t.id}')" id="ct-${t.id}"
+      class="case-type-btn glass rounded-xl p-3 flex flex-col items-center gap-1.5 text-center transition-all hover:bg-indigo-500/10 ${t.id === selectedCaseType ? 'border-indigo-500 bg-indigo-500/15 text-white' : 'text-slate-400'}">
+      <span class="text-lg">${t.icon}</span>
+      <span class="text-xs font-medium">${t.label}</span>
+    </button>
+  `).join('');
+}
 
-<!-- function selectCaseType(id) { -->
-<!--   selectedCaseType = id; -->
-<!--   document.querySelectorAll('.case-type-btn').forEach(btn => { -->
-<!--     btn.classList.remove('border-indigo-500','bg-indigo-500/15','text-white'); -->
-<!--     btn.classList.add('text-slate-400'); -->
-<!--   }); -->
-<!--   const el = document.getElementById('ct-' + id); -->
-<!--   el.classList.add('border-indigo-500','bg-indigo-500/15','text-white'); -->
-<!--   el.classList.remove('text-slate-400'); -->
-<!-- } -->
+function selectCaseType(id) {
+  selectedCaseType = id;
+  document.querySelectorAll('.case-type-btn').forEach(btn => {
+    btn.classList.remove('border-indigo-500','bg-indigo-500/15','text-white');
+    btn.classList.add('text-slate-400');
+  });
+  const el = document.getElementById('ct-' + id);
+  el.classList.add('border-indigo-500','bg-indigo-500/15','text-white');
+  el.classList.remove('text-slate-400');
+}
 
-<!-- // ── Modal Controls -->
-<!-- function openNewCaseModal() { -->
-<!--   renderCaseTypes(); -->
-<!--   document.getElementById('newCaseModal').classList.remove('hidden'); -->
-<!-- } -->
-<!-- function closeNewCaseModal() { -->
-<!--   document.getElementById('newCaseModal').classList.add('hidden'); -->
-<!-- } -->
+// ── Modal Controls
+function openNewCaseModal() {
+  renderCaseTypes();
+  document.getElementById('newCaseModal').classList.remove('hidden');
+}
+function closeNewCaseModal() {
+  document.getElementById('newCaseModal').classList.add('hidden');
+}
 
-<!-- async function submitNewCase() { -->
-<!--   const title = document.getElementById('caseTitle').value.trim(); -->
-<!--   if (!title) { -->
-<!--     document.getElementById('caseTitle').focus(); -->
-<!--     document.getElementById('caseTitle').style.borderColor = '#ef4444'; -->
-<!--     return; -->
-<!--   } -->
-<!--   // Mock success — in Phase 5 this calls POST /api/v1/cases -->
-<!--   closeNewCaseModal(); -->
-<!--   const newCase = { -->
-<!--     id: 'LL-2026-' + Math.floor(Math.random()*900+100), -->
-<!--     title, type: CASE_TYPES.find(t=>t.id===selectedCaseType)?.label || 'Other', -->
-<!--     status:'pending', lawyer:'Unassigned', -->
-<!--     date: new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), -->
-<!--     priority: document.getElementById('casePriority').value, -->
-<!--   }; -->
-<!--   MOCK_CASES.unshift(newCase); -->
-<!--   document.getElementById('statCases').textContent = MOCK_CASES.length; -->
-<!--   renderCases(activeCaseFilter); -->
-<!--   // Toast -->
-<!--   showToast('Case opened successfully!', 'success'); -->
-<!-- } -->
+async function submitNewCase() {
+  const title = document.getElementById('caseTitle').value.trim();
+  if (!title) {
+    document.getElementById('caseTitle').focus();
+    document.getElementById('caseTitle').style.borderColor = '#ef4444';
+    return;
+  }
+  closeNewCaseModal();
+  const newCase = {
+    id: 'LL-2026-' + Math.floor(Math.random()*900+100),
+    title, type: CASE_TYPES.find(t=>t.id===selectedCaseType)?.label || 'Other',
+    status:'pending', lawyer:'Unassigned',
+    date: new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    priority: document.getElementById('casePriority').value,
+  };
+  MOCK_CASES.unshift(newCase);
+  document.getElementById('statCases').textContent = MOCK_CASES.length;
+  renderCases(activeCaseFilter);
+  showToast('Case opened successfully!', 'success');
+}
 
-<!-- // ── Notifications toggle -->
-<!-- function toggleNotifications() { -->
-<!--   const d = document.getElementById('notifDropdown'); -->
-<!--   d.classList.toggle('hidden'); -->
-<!-- } -->
-<!-- document.addEventListener('click', (e) => { -->
-<!--   if (!e.target.closest('#notifDropdown') && !e.target.closest('button[onclick="toggleNotifications()"]')) { -->
-<!--     document.getElementById('notifDropdown')?.classList.add('hidden'); -->
-<!--   } -->
-<!-- }); -->
+// ── Notifications toggle
+function toggleNotifications() {
+  const d = document.getElementById('notifDropdown');
+  d.classList.toggle('hidden');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#notifDropdown') && !e.target.closest('button[onclick="toggleNotifications()"]')) {
+    document.getElementById('notifDropdown')?.classList.add('hidden');
+  }
+});
 
-<!-- // ── Sidebar toggle (mobile) -->
-<!-- function toggleSidebar() { -->
-<!--   const sidebar  = document.getElementById('sidebar'); -->
-<!--   const overlay  = document.getElementById('sidebarOverlay'); -->
-<!--   const isOpen   = !sidebar.classList.contains('-translate-x-full'); -->
-<!--   sidebar.classList.toggle('-translate-x-full', isOpen); -->
-<!--   overlay.classList.toggle('hidden', isOpen); -->
-<!-- } -->
+// ── Sidebar toggle (mobile)
+function toggleSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  const isOpen   = !sidebar.classList.contains('-translate-x-full');
+  sidebar.classList.toggle('-translate-x-full', isOpen);
+  overlay.classList.toggle('hidden', isOpen);
+}
 
-<!-- // ── Logout -->
-<!-- function handleLogout() { -->
-<!--   localStorage.removeItem('ll_session'); -->
-<!--   sessionStorage.removeItem('ll_session'); -->
-<!--   window.location.href = 'login.html'; -->
-<!-- } -->
+// ── Logout
+function handleLogout() {
+  localStorage.removeItem('ll_session');
+  sessionStorage.removeItem('ll_session');
+  localStorage.removeItem('ll_cases');
+  localStorage.removeItem('ll_deadlines');
+  localStorage.removeItem('ll_chats');
+  window.location.href = 'login.html';
+}
 
-<!-- // ── Toast notification -->
-<!-- function showToast(msg, type = 'success') { -->
-<!--   const toast = document.createElement('div'); -->
-<!--   toast.className = `fixed bottom-6 right-6 z-50 glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type === 'success' ? 'border-green-500/30' : 'border-red-500/30'}`; -->
-<!--   toast.innerHTML = ` -->
-<!--     <i class="fas ${type === 'success' ? 'fa-check-circle text-green-400' : 'fa-circle-exclamation text-red-400'}"></i> -->
-<!--     <span class="text-white text-sm font-medium">${msg}</span> -->
-<!--   `; -->
-<!--   document.body.appendChild(toast); -->
-<!--   setTimeout(() => toast.remove(), 3500); -->
-<!-- } -->
+// ── Toast notification
+function showToast(msg, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `fixed bottom-6 right-6 z-50 glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type === 'success' ? 'border-green-500/30' : 'border-red-500/30'}`;
+  toast.innerHTML = `
+    <i class="fas ${type === 'success' ? 'fa-check-circle text-green-400' : 'fa-circle-exclamation text-red-400'}"></i>
+    <span class="text-white text-sm font-medium">${msg}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
 
-<!-- // ── Greeting based on time -->
-<!-- function setGreeting() { -->
-<!--   const h = new Date().getHours(); -->
-<!--   const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; -->
-<!--   document.querySelector('.glass.rounded-2xl h1').innerHTML = -->
-<!--     `${greet}, <span id="welcomeName" class="gradient-text">${session?.name?.split(' ')[0] || 'User'}</span> 👋`; -->
-<!-- } -->
+// ── Greeting based on time
+function setGreeting() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  document.querySelector('.glass.rounded-2xl h1').innerHTML =
+    `${greet}, <span id="welcomeName" class="gradient-text">${session?.name?.split(' ')[0] || 'User'}</span> 👋`;
+}
 
-<!-- // ── Init -->
-<!-- renderCases(); -->
-<!-- renderActivity(); -->
-<!-- renderDocRisk(); -->
-<!-- renderAIInsights(); -->
-<!-- renderNotifications(); -->
-<!-- setGreeting(); -->
-<!-- </script> -->
+// ── Init
+renderCases();
+renderActivity();
+renderDocRisk();
+renderAIInsights();
+renderNotifications();
+setGreeting();
+</script>
 </body>
 </html>

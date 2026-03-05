@@ -577,7 +577,14 @@ function toggleSidebar() {
   const open = !s.classList.contains('-translate-x-full');
   s.classList.toggle('-translate-x-full', open); o.classList.toggle('hidden', open);
 }
-function handleLogout() { localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session'); window.location.href = 'login.html'; }
+function handleLogout() {
+  localStorage.removeItem('ll_session');
+  sessionStorage.removeItem('ll_session');
+  localStorage.removeItem('ll_cases');
+  localStorage.removeItem('ll_deadlines');
+  localStorage.removeItem('ll_chats');
+  window.location.href = 'login.html';
+}
 function showToast(msg, type='success') {
   const t = document.createElement('div');
   t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;

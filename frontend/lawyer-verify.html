@@ -511,6 +511,9 @@ function toggleSidebar() {
 function handleLogout() {
   localStorage.removeItem('ll_session');
   sessionStorage.removeItem('ll_session');
+  localStorage.removeItem('ll_cases');
+  localStorage.removeItem('ll_deadlines');
+  localStorage.removeItem('ll_chats');
   window.location.href = 'login.html';
 }
 

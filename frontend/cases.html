@@ -429,16 +429,19 @@ function toggleSidebar() {
   o.classList.toggle('hidden', open);
 }
 
-function handleLogout() {
-  localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session');
-  window.location.href = 'login.html';
-}
-
 function showToast(msg, type='success') {
   const t = document.createElement('div');
   t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
   t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
   document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+function handleLogout() {
+  localStorage.removeItem('ll_session');
+  sessionStorage.removeItem('ll_session');
+  localStorage.removeItem('ll_cases');
+  localStorage.removeItem('ll_deadlines');
+  localStorage.removeItem('ll_chats');
+  window.location.href = 'login.html';
 }
 
 renderCases();

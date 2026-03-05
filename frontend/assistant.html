@@ -462,7 +462,14 @@ function toggleSidebar() {
   const open = !s.classList.contains('-translate-x-full');
   s.classList.toggle('-translate-x-full', open); o.classList.toggle('hidden', open);
 }
-function handleLogout() { localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session'); window.location.href = 'login.html'; }
+function handleLogout() {
+  localStorage.removeItem('ll_session');
+  sessionStorage.removeItem('ll_session');
+  localStorage.removeItem('ll_cases');
+  localStorage.removeItem('ll_deadlines');
+  localStorage.removeItem('ll_chats');
+  window.location.href = 'login.html';
+}
 
 renderChatHistory();
 </script>
