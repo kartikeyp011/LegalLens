@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lawyer Dashboard — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'] },
+          animation: {
+            'fade-up':    'fadeUp 0.5s ease-out forwards',
+            'fade-in':    'fadeIn 0.4s ease-out forwards',
+            'pulse-slow': 'pulse 3s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeUp: { '0%':{ opacity:'0', transform:'translateY(16px)' }, '100%':{ opacity:'1', transform:'translateY(0)' } },
+            fadeIn: { '0%':{ opacity:'0' }, '100%':{ opacity:'1' } },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family:'Inter',sans-serif; background:#0a0a0f; color:#e2e8f0; }
+    .glass      { background:rgba(255,255,255,0.05); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); }
+    .glass-dark { background:rgba(10,10,20,0.85);   backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.06); }
+    .gradient-text { background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); transition:all 0.3s; }
+    .btn-primary:hover { background:linear-gradient(135deg,#4f46e5,#7c3aed); transform:translateY(-1px); box-shadow:0 8px 30px rgba(99,102,241,0.35); }
+    .sidebar-link { transition:all 0.2s ease; border-radius:0.75rem; }
+    .sidebar-link:hover  { background:rgba(255,255,255,0.06); color:#fff; }
+    .sidebar-link.active { background:rgba(99,102,241,0.18); color:#a5b4fc; border:1px solid rgba(99,102,241,0.25); }
+    .stat-card { transition:transform 0.3s, box-shadow 0.3s; }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(99,102,241,0.15); }
+    .case-row { transition:background 0.2s; cursor:pointer; }
+    .case-row:hover { background:rgba(255,255,255,0.04); }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:0.7rem; font-weight:600; }
+    .badge-active   { background:rgba(34,197,94,0.15);  color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
+    .badge-pending  { background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
+    .badge-closed   { background:rgba(148,163,184,0.1); color:#94a3b8; border:1px solid rgba(148,163,184,0.15); }
+    .badge-review   { background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.25); }
+    .badge-verified { background:rgba(34,197,94,0.15);  color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
+    .badge-pending-v{ background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
+    .progress-bar { height:5px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; }
+    .progress-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+    .mobile-overlay { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); }
+    .client-card { transition:all 0.25s ease; }
+    .client-card:hover { background:rgba(255,255,255,0.07); transform:translateY(-2px); }
+    .notification-dot { width:8px; height:8px; background:#6366f1; border-radius:50%; position:absolute; top:2px; right:2px; }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#374151; border-radius:3px; }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════ -->
+<aside id="sidebar"
+  class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+
+  <!-- Logo -->
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-scale-balanced text-white text-xs"></i>
+      </div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Lawyer Profile -->
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0" id="sidebarAvatar">P</div>
+        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
+          <i class="fas fa-check text-white" style="font-size:6px"></i>
+        </div>
+      </div>
+      <div class="min-w-0">
+        <p class="text-white font-semibold text-sm truncate" id="sidebarName">Adv. Priya Singh</p>
+        <div id="verificationBadge" class="flex items-center gap-1.5 mt-0.5">
+          <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+          <span class="text-green-400 text-xs font-medium">Verified Lawyer</span>
+        </div>
+      </div>
+    </div>
+    <!-- Specialization -->
+    <div class="mt-3 glass rounded-xl px-3 py-2 flex items-center gap-2">
+      <i class="fas fa-briefcase text-purple-400 text-xs"></i>
+      <span class="text-slate-400 text-xs" id="sidebarSpec">Property & Civil Law</span>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pb-2">Main</p>
+    <a href="lawyer-dashboard.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+      <i class="fas fa-gauge-high w-4 text-center text-indigo-400"></i> Dashboard
+    </a>
+    <a href="cases.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-folder-open w-4 text-center"></i> Assigned Cases
+      <span class="ml-auto bg-indigo-500/20 text-indigo-300 text-xs px-2 py-0.5 rounded-full">4</span>
+    </a>
+    <a href="hearings.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-gavel w-4 text-center"></i> Hearings
+      <span class="ml-auto w-2 h-2 bg-amber-400 rounded-full animate-pulse-slow"></span>
+    </a>
+    <a href="documents.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-file-magnifying-glass w-4 text-center"></i> Case Documents
+    </a>
+    <a href="drafts.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-file-pen w-4 text-center"></i> Draft Generator
+    </a>
+
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-2">Clients</p>
+    <a href="#clients" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-users w-4 text-center"></i> My Clients
+    </a>
+    <a href="#schedule" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-calendar-days w-4 text-center"></i> Schedule
+    </a>
+
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-2">Tools</p>
+    <a href="assistant.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-robot w-4 text-center"></i> AI Assistant
+    </a>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-book-open w-4 text-center"></i> Legal Resources
+    </a>
+  </nav>
+
+  <!-- Bottom -->
+  <div class="px-3 py-4 border-t border-white/5 space-y-0.5">
+    <a href="lawyer-verify.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-id-card w-4 text-center"></i> My Credentials
+    </a>
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400">
+      <i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- Sidebar Overlay -->
+<div id="sidebarOverlay" class="fixed inset-0 z-30 mobile-overlay hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+  <!-- Top Bar -->
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white transition-colors">
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i>
+      <i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium">Lawyer Dashboard</span>
+    </div>
+    <div class="flex-1 max-w-md ml-auto sm:ml-4">
+      <div class="relative">
+        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none"></i>
+        <input type="text" placeholder="Search assigned cases, clients..."
+          class="w-full bg-white/4 border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <button onclick="toggleNotifications()" class="relative w-9 h-9 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+        <i class="fas fa-bell text-sm"></i>
+        <span class="notification-dot"></span>
+      </button>
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm cursor-pointer flex-shrink-0" id="topAvatar">P</div>
+    </div>
+  </header>
+
+  <!-- Notifications Dropdown -->
+  <div id="notifDropdown" class="hidden fixed top-16 right-4 z-50 w-80 glass-dark rounded-2xl border border-white/8 shadow-2xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-white font-semibold text-sm">Notifications</h3>
+      <button class="text-indigo-400 text-xs">Mark all read</button>
+    </div>
+    <div class="divide-y divide-white/5 max-h-72 overflow-y-auto" id="notifList"></div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <main class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+
+    <!-- Verification Alert Banner (shown if pending) -->
+    <div id="verificationAlert" class="hidden glass rounded-2xl px-6 py-4 flex items-center gap-4 border border-amber-500/25"
+      style="background:rgba(251,191,36,0.06)">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-clock text-amber-400"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-white font-semibold text-sm">Verification Pending</p>
+        <p class="text-slate-400 text-xs mt-0.5">Your Bar Council documents are under review. Admin approval takes up to 15 days. You'll be notified via email.</p>
+      </div>
+      <span class="badge badge-pending flex-shrink-0">Under Review</span>
+    </div>
+
+    <!-- Welcome Banner -->
+    <div class="glass rounded-2xl px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(99,102,241,0.08)); border-color:rgba(168,85,247,0.2);">
+      <div>
+        <h1 class="text-xl font-black text-white">Welcome, <span id="welcomeName" class="gradient-text">Adv. Priya</span> ⚖️</h1>
+        <p class="text-slate-400 text-sm mt-1">You have <span id="activeCaseCount" class="text-purple-300 font-semibold">2 active cases</span> and <span id="hearingCount" class="text-amber-300 font-semibold">1 hearing</span> this week.</p>
+      </div>
+      <div class="flex gap-3 flex-shrink-0">
+        <button onclick="openScheduleModal()" class="glass flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-medium hover:bg-white/8 transition-all">
+          <i class="fas fa-calendar-plus text-indigo-400 text-xs"></i> Schedule Hearing
+        </button>
+        <button onclick="openCaseUpdateModal()" class="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold">
+          <i class="fas fa-pen text-xs"></i> Update Case
+        </button>
+      </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/25 flex items-center justify-center">
+            <i class="fas fa-folder-open text-purple-400 text-sm"></i>
+          </div>
+          <span class="text-purple-400 text-xs font-semibold">Assigned</span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white">4</p>
+          <p class="text-slate-500 text-xs mt-0.5">Assigned Cases</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-purple-500 to-indigo-500 w-4/5"></div></div>
+      </div>
+
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-green-500/20 border border-green-500/25 flex items-center justify-center">
+            <i class="fas fa-check-circle text-green-400 text-sm"></i>
+          </div>
+          <span class="text-green-400 text-xs font-semibold">Won</span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white">12</p>
+          <p class="text-slate-500 text-xs mt-0.5">Cases Resolved</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-green-400 to-emerald-500 w-3/4"></div></div>
+      </div>
+
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/25 flex items-center justify-center">
+            <i class="fas fa-gavel text-amber-400 text-sm"></i>
+          </div>
+          <span class="text-amber-400 text-xs font-semibold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse-slow"></span>This week
+          </span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white">3</p>
+          <p class="text-slate-500 text-xs mt-0.5">Hearings Scheduled</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-amber-400 to-orange-500 w-1/2"></div></div>
+      </div>
+
+      <div class="glass stat-card rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center">
+            <i class="fas fa-users text-indigo-400 text-sm"></i>
+          </div>
+          <span class="text-indigo-400 text-xs font-semibold">Active</span>
+        </div>
+        <div>
+          <p class="text-3xl font-black text-white">4</p>
+          <p class="text-slate-500 text-xs mt-0.5">Active Clients</p>
+        </div>
+        <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-indigo-500 to-purple-500 w-2/3"></div></div>
+      </div>
+    </div>
+
+    <!-- Assigned Cases + Hearing Schedule -->
+    <div class="grid lg:grid-cols-3 gap-6">
+
+      <!-- Assigned Cases Table -->
+      <div class="lg:col-span-2 glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <div>
+            <h2 class="text-white font-bold text-base">Assigned Cases</h2>
+            <p class="text-slate-500 text-xs mt-0.5">Only cases assigned to you are visible</p>
+          </div>
+          <div class="flex items-center gap-2 glass rounded-xl px-3 py-1.5">
+            <i class="fas fa-shield-halved text-green-400 text-xs"></i>
+            <span class="text-green-400 text-xs font-medium">Isolated View</span>
+          </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="px-6 py-3 flex gap-2 border-b border-white/5 overflow-x-auto">
+          <button onclick="filterCases('all')"    id="tab-all"    class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/20 text-purple-300 whitespace-nowrap transition-all">All (4)</button>
+          <button onclick="filterCases('active')" id="tab-active" class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white whitespace-nowrap transition-all">Active (2)</button>
+          <button onclick="filterCases('review')" id="tab-review" class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white whitespace-nowrap transition-all">In Review (1)</button>
+          <button onclick="filterCases('closed')" id="tab-closed" class="case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white whitespace-nowrap transition-all">Closed (1)</button>
+        </div>
+
+        <div class="divide-y divide-white/5" id="casesContainer"></div>
+      </div>
+
+      <!-- This Week's Hearings -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <h2 class="text-white font-bold text-base">This Week</h2>
+          <a href="hearings.html" class="text-indigo-400 text-xs hover:text-indigo-300">All <i class="fas fa-arrow-right ml-1"></i></a>
+        </div>
+        <div class="p-4 space-y-3" id="weekHearings"></div>
+      </div>
+
+    </div>
+
+    <!-- Clients + Case Timeline -->
+    <div class="grid lg:grid-cols-3 gap-6" id="clients">
+
+      <!-- Clients -->
+      <div class="lg:col-span-2 glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <h2 class="text-white font-bold text-base">Active Clients</h2>
+          <span class="text-slate-500 text-xs">From assigned cases only</span>
+        </div>
+        <div class="p-4 grid sm:grid-cols-2 gap-3" id="clientsGrid"></div>
+      </div>
+
+      <!-- Case Status Breakdown -->
+      <div class="glass rounded-2xl p-6 space-y-5">
+        <h2 class="text-white font-bold text-base">Case Breakdown</h2>
+
+        <!-- Donut-style visual -->
+        <div class="flex items-center justify-center">
+          <div class="relative w-32 h-32">
+            <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3"/>
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#22c55e" stroke-width="3"
+                stroke-dasharray="50 50" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#6366f1" stroke-width="3"
+                stroke-dasharray="25 75" stroke-dashoffset="-50" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f59e0b" stroke-width="3"
+                stroke-dasharray="15 85" stroke-dashoffset="-75" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#94a3b8" stroke-width="3"
+                stroke-dasharray="10 90" stroke-dashoffset="-90" stroke-linecap="round"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <p class="text-white font-black text-xl">4</p>
+              <p class="text-slate-500 text-xs">Cases</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span><span class="text-slate-400 text-sm">Active</span></div>
+            <span class="text-white font-bold text-sm">2</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span><span class="text-slate-400 text-sm">In Review</span></div>
+            <span class="text-white font-bold text-sm">1</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span><span class="text-slate-400 text-sm">Hearing Due</span></div>
+            <span class="text-white font-bold text-sm">1</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span><span class="text-slate-400 text-sm">Closed</span></div>
+            <span class="text-white font-bold text-sm">1</span>
+          </div>
+        </div>
+
+        <button onclick="openCaseUpdateModal()" class="btn-primary w-full py-2.5 rounded-xl text-white text-sm font-medium flex items-center justify-center gap-2">
+          <i class="fas fa-pen text-xs"></i> Update a Case
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Recent Activity + Quick Tools -->
+    <div class="grid lg:grid-cols-2 gap-6">
+
+      <!-- Recent Activity -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5">
+          <h2 class="text-white font-bold text-base">Recent Activity</h2>
+        </div>
+        <div class="p-6 space-y-1" id="activityList"></div>
+      </div>
+
+      <!-- Quick Tools -->
+      <div class="glass rounded-2xl p-6 space-y-4">
+        <h2 class="text-white font-bold text-base">Quick Tools</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <a href="drafts.html" class="glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center hover:bg-white/8 transition-all cursor-pointer">
+            <div class="w-11 h-11 rounded-xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center">
+              <i class="fas fa-file-pen text-indigo-400"></i>
+            </div>
+            <div><p class="text-white text-xs font-semibold">Draft Doc</p><p class="text-slate-500 text-xs">Notice / NDA</p></div>
+          </a>
+          <a href="documents.html" class="glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center hover:bg-white/8 transition-all cursor-pointer">
+            <div class="w-11 h-11 rounded-xl bg-purple-500/20 border border-purple-500/25 flex items-center justify-center">
+              <i class="fas fa-file-magnifying-glass text-purple-400"></i>
+            </div>
+            <div><p class="text-white text-xs font-semibold">Analyze</p><p class="text-slate-500 text-xs">Document</p></div>
+          </a>
+          <a href="assistant.html" class="glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center hover:bg-white/8 transition-all cursor-pointer">
+            <div class="w-11 h-11 rounded-xl bg-pink-500/20 border border-pink-500/25 flex items-center justify-center">
+              <i class="fas fa-robot text-pink-400"></i>
+            </div>
+            <div><p class="text-white text-xs font-semibold">AI Research</p><p class="text-slate-500 text-xs">Case law</p></div>
+          </a>
+          <button onclick="openScheduleModal()" class="glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center hover:bg-white/8 transition-all cursor-pointer">
+            <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/25 flex items-center justify-center">
+              <i class="fas fa-calendar-plus text-amber-400"></i>
+            </div>
+            <div><p class="text-white text-xs font-semibold">Schedule</p><p class="text-slate-500 text-xs">Hearing</p></div>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCHEDULE HEARING MODAL
+═══════════════════════════════════════════ -->
+<div id="scheduleModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeScheduleModal()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-md relative z-10 overflow-hidden animate-fade-up">
+    <div class="px-7 py-5 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-white font-bold text-lg">Schedule Hearing</h3>
+      <button onclick="closeScheduleModal()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-7 space-y-4">
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Case</label>
+        <select id="hearingCase" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+          <option class="bg-slate-900" value="">Select a case</option>
+          <option class="bg-slate-900">LL-2025-089 — Rent Dispute</option>
+          <option class="bg-slate-900">LL-2025-102 — Consumer Complaint</option>
+          <option class="bg-slate-900">LL-2026-014 — Property Dispute</option>
+          <option class="bg-slate-900">LL-2026-031 — Employment Matter</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Date</label>
+          <input type="date" id="hearingDate"
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all"
+            style="color-scheme:dark"/>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Time</label>
+          <input type="time" id="hearingTime"
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all"
+            style="color-scheme:dark"/>
+        </div>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Court / Location</label>
+        <input type="text" id="hearingCourt" placeholder="e.g. Room 4, Tis Hazari, Delhi"
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Notes <span class="text-slate-600 text-xs">(optional)</span></label>
+        <textarea id="hearingNotes" rows="2" placeholder="Any notes about this hearing..."
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+      </div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeScheduleModal()" class="flex-1 glass rounded-xl py-3 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium">Cancel</button>
+        <button onclick="submitSchedule()" class="flex-1 btn-primary rounded-xl py-3 text-sm text-white font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-calendar-check text-xs"></i> Schedule
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CASE UPDATE MODAL
+═══════════════════════════════════════════ -->
+<div id="caseUpdateModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCaseUpdateModal()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-md relative z-10 overflow-hidden animate-fade-up">
+    <div class="px-7 py-5 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-white font-bold text-lg">Update Case Status</h3>
+      <button onclick="closeCaseUpdateModal()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-7 space-y-4">
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Select Case</label>
+        <select id="updateCase" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+          <option class="bg-slate-900">LL-2025-089 — Rent Dispute</option>
+          <option class="bg-slate-900">LL-2025-102 — Consumer Complaint</option>
+          <option class="bg-slate-900">LL-2026-014 — Property Dispute</option>
+          <option class="bg-slate-900">LL-2026-031 — Employment Matter</option>
+        </select>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">New Status</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="selectStatus(this,'active')"   class="status-btn glass rounded-xl py-2.5 text-xs text-green-400 font-medium hover:bg-green-500/10 transition-all">🟢 Active</button>
+          <button onclick="selectStatus(this,'review')"   class="status-btn glass rounded-xl py-2.5 text-xs text-purple-400 font-medium hover:bg-purple-500/10 transition-all">🔵 In Review</button>
+          <button onclick="selectStatus(this,'hearing')"  class="status-btn glass rounded-xl py-2.5 text-xs text-amber-400 font-medium hover:bg-amber-500/10 transition-all">🔨 Hearing Set</button>
+          <button onclick="selectStatus(this,'closed')"   class="status-btn glass rounded-xl py-2.5 text-xs text-slate-400 font-medium hover:bg-slate-500/10 transition-all">⚪ Closed</button>
+        </div>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Update Note</label>
+        <textarea rows="3" placeholder="Briefly describe this update for the client..."
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+      </div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeCaseUpdateModal()" class="flex-1 glass rounded-xl py-3 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium">Cancel</button>
+        <button onclick="submitCaseUpdate()" class="flex-1 btn-primary rounded-xl py-3 text-sm text-white font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-check text-xs"></i> Save Update
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script>
+// ── Session Guard (Lawyer only)
+const session = JSON.parse(
+  localStorage.getItem('ll_session') ||
+  sessionStorage.getItem('ll_session') || 'null'
+);
+if (!session || !session.token) { window.location.href = 'login.html'; }
+// In Phase 6, uncomment this role guard:
+// if (session && session.role !== 'lawyer') { window.location.href = 'dashboard.html'; }
+
+// ── Populate user info
+if (session) {
+  const first = session.name?.split(' ').slice(-1)[0] || 'Counsel';
+  const init  = session.name?.charAt(0).toUpperCase() || 'L';
+  document.getElementById('welcomeName').textContent   = session.name?.split(' ')[0] || 'Counsel';
+  document.getElementById('sidebarName').textContent   = session.name || 'Adv. Lawyer';
+  document.getElementById('sidebarAvatar').textContent  = init;
+  document.getElementById('topAvatar').textContent      = init;
+  // Show verification alert for demo purposes if not verified
+  if (session.role === 'lawyer') {
+    // Mock: verified. To show pending, set: document.getElementById('verificationAlert').classList.remove('hidden');
+  }
+}
+
+// ── Mock Data
+const MOCK_CASES = [
+  { id:'LL-2025-089', title:'Rent Deposit Dispute',        type:'Property', client:'Rahul Sharma',   status:'active',  nextDate:'6 Mar 2026' },
+  { id:'LL-2025-102', title:'Consumer Complaint — Samsung',type:'Consumer', client:'Sunita Verma',   status:'review',  nextDate:'12 Mar 2026'},
+  { id:'LL-2026-014', title:'Flat Ownership Dispute',      type:'Property', client:'Mohan Das',      status:'active',  nextDate:'8 Mar 2026' },
+  { id:'LL-2026-031', title:'Wrongful Termination',        type:'Labour',   client:'Anita Kapoor',   status:'closed',  nextDate:'Resolved'   },
+];
+
+const MOCK_HEARINGS = [
+  { case:'LL-2025-089', title:'Rent Dispute',        date:'6 Mar',  time:'10:30 AM', court:'Tis Hazari, Room 4',  color:'border-amber-500/30 bg-amber-500/5' },
+  { case:'LL-2026-014', title:'Flat Ownership',      date:'8 Mar',  time:'2:00 PM',  court:'Delhi HC, Court 7',   color:'border-indigo-500/30 bg-indigo-500/5'},
+  { case:'LL-2025-102', title:'Consumer Complaint',  date:'12 Mar', time:'11:00 AM', court:'District Court',      color:'border-purple-500/30 bg-purple-500/5'},
+];
+
+const MOCK_CLIENTS = [
+  { name:'Rahul Sharma',  case:'Rent Dispute',        type:'Property', avatar:'R', color:'from-pink-400 to-rose-500',    status:'active'  },
+  { name:'Sunita Verma',  case:'Consumer Complaint',  type:'Consumer', avatar:'S', color:'from-green-400 to-emerald-500',status:'review'  },
+  { name:'Mohan Das',     case:'Flat Ownership',      type:'Property', avatar:'M', color:'from-blue-400 to-indigo-500',  status:'active'  },
+  { name:'Anita Kapoor',  case:'Wrongful Termination',type:'Labour',   avatar:'A', color:'from-amber-400 to-orange-500', status:'closed'  },
+];
+
+const MOCK_ACTIVITY = [
+  { icon:'fa-calendar-check', color:'text-amber-400',  text:'Hearing confirmed',        sub:'LL-2025-089 — 6 Mar 10:30 AM', time:'1h ago'  },
+  { icon:'fa-file-upload',    color:'text-indigo-400', text:'Document uploaded by client',sub:'Sale Agreement — Mohan Das',  time:'3h ago'  },
+  { icon:'fa-pen-to-square',  color:'text-purple-400', text:'Case status updated',       sub:'LL-2025-102 → In Review',      time:'1d ago'  },
+  { icon:'fa-robot',          color:'text-green-400',  text:'AI draft generated',        sub:'Legal Notice for Rahul Sharma', time:'1d ago'  },
+  { icon:'fa-user-plus',      color:'text-blue-400',   text:'New case assigned',         sub:'LL-2026-031 — Anita Kapoor',   time:'3d ago'  },
+];
+
+const MOCK_NOTIFS = [
+  { icon:'fa-folder-plus',    color:'text-indigo-400', title:'New Case Assigned',    body:'LL-2026-031 from Anita Kapoor', time:'2h ago',  unread:true  },
+  { icon:'fa-file-upload',    color:'text-purple-400', title:'Document Uploaded',    body:'Mohan Das uploaded a file',    time:'4h ago',  unread:true  },
+  { icon:'fa-gavel',          color:'text-amber-400',  title:'Hearing Reminder',     body:'Tomorrow 10:30 AM — Tis Hazari',time:'1d ago', unread:false },
+];
+
+let activeCaseFilter = 'all';
+let selectedStatus   = '';
+
+// ── Render Cases
+function renderCases(filter = 'all') {
+  const container = document.getElementById('casesContainer');
+  const filtered  = filter === 'all' ? MOCK_CASES : MOCK_CASES.filter(c => c.status === filter);
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="px-6 py-10 text-center text-slate-500 text-sm">No ${filter} cases.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(c => `
+    <div class="case-row px-6 py-4 flex items-center gap-4" onclick="window.location='cases.html'">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        c.status==='active' ? 'bg-green-500/15 border border-green-500/25' :
+        c.status==='review' ? 'bg-purple-500/15 border border-purple-500/25' :
+        'bg-slate-500/15 border border-slate-500/25'
+      }">
+        <i class="fas fa-folder text-sm ${
+          c.status==='active'?'text-green-400':c.status==='review'?'text-purple-400':'text-slate-400'
+        }"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold truncate">${c.title}</p>
+        <p class="text-slate-500 text-xs mt-0.5">#${c.id} · ${c.type} · <span class="text-slate-400">${c.client}</span></p>
+      </div>
+      <div class="flex-shrink-0 text-right space-y-1">
+        <span class="badge ${
+          c.status==='active'?'badge-active':c.status==='review'?'badge-review':'badge-closed'
+        }">${c.status==='review'?'In Review':c.status.charAt(0).toUpperCase()+c.status.slice(1)}</span>
+        <p class="text-slate-600 text-xs">${c.nextDate}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCases(filter) {
+  activeCaseFilter = filter;
+  document.querySelectorAll('.case-tab').forEach(b => {
+    b.classList.remove('bg-purple-500/20','text-purple-300');
+    b.classList.add('text-slate-500');
+  });
+  const t = document.getElementById('tab-'+filter);
+  if (t) { t.classList.add('bg-purple-500/20','text-purple-300'); t.classList.remove('text-slate-500'); }
+  renderCases(filter);
+}
+
+// ── Render Hearings
+function renderHearings() {
+  document.getElementById('weekHearings').innerHTML = MOCK_HEARINGS.map(h => `
+    <div class="glass rounded-2xl p-4 border ${h.color} space-y-2">
+      <div class="flex items-center justify-between">
+        <p class="text-white text-sm font-semibold truncate pr-2">${h.title}</p>
+        <span class="text-xs text-amber-300 font-medium flex-shrink-0">${h.date}</span>
+      </div>
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 text-xs text-slate-400">
+          <i class="fas fa-clock text-xs w-3"></i>${h.time}
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-400">
+          <i class="fas fa-location-dot text-xs w-3"></i>${h.court}
+        </div>
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+          <i class="fas fa-hashtag text-xs w-3"></i>${h.case}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Render Clients
+function renderClients() {
+  document.getElementById('clientsGrid').innerHTML = MOCK_CLIENTS.map(c => `
+    <div class="client-card glass rounded-2xl p-4 flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${c.avatar}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white font-semibold text-sm truncate">${c.name}</p>
+        <p class="text-slate-500 text-xs truncate">${c.case}</p>
+        <span class="badge mt-1 ${c.status==='active'?'badge-active':c.status==='review'?'badge-review':'badge-closed'}">
+          ${c.status==='review'?'In Review':c.status.charAt(0).toUpperCase()+c.status.slice(1)}
+        </span>
+      </div>
+      <button class="w-8 h-8 glass rounded-xl flex items-center justify-center text-slate-500 hover:text-white transition-colors flex-shrink-0">
+        <i class="fas fa-arrow-right text-xs"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+// ── Render Activity
+function renderActivity() {
+  document.getElementById('activityList').innerHTML = MOCK_ACTIVITY.map(a => `
+    <div class="flex items-start gap-3 py-2.5">
+      <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i class="fas ${a.icon} text-xs ${a.color}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-slate-300 text-sm font-medium">${a.text}</p>
+        <p class="text-slate-600 text-xs truncate">${a.sub}</p>
+      </div>
+      <span class="text-slate-600 text-xs flex-shrink-0">${a.time}</span>
+    </div>
+  `).join('');
+}
+
+// ── Render Notifications
+function renderNotifications() {
+  document.getElementById('notifList').innerHTML = MOCK_NOTIFS.map(n => `
+    <div class="px-5 py-3.5 flex items-start gap-3 hover:bg-white/4 transition-colors ${n.unread?'bg-white/[0.02]':''}">
+      <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i class="fas ${n.icon} text-xs ${n.color}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-xs font-semibold">${n.title}</p>
+        <p class="text-slate-500 text-xs truncate">${n.body}</p>
+        <p class="text-slate-700 text-xs mt-0.5">${n.time}</p>
+      </div>
+      ${n.unread?'<div class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0 mt-1.5"></div>':''}
+    </div>
+  `).join('');
+}
+
+// ── Modal Controls
+function openScheduleModal()  { document.getElementById('scheduleModal').classList.remove('hidden'); }
+function closeScheduleModal() { document.getElementById('scheduleModal').classList.add('hidden'); }
+function openCaseUpdateModal()  { document.getElementById('caseUpdateModal').classList.remove('hidden'); }
+function closeCaseUpdateModal() { document.getElementById('caseUpdateModal').classList.add('hidden'); }
+
+function selectStatus(btn, status) {
+  selectedStatus = status;
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('ring-2','ring-indigo-500'));
+  btn.classList.add('ring-2','ring-indigo-500');
+}
+
+async function submitSchedule() {
+  closeScheduleModal();
+  showToast('Hearing scheduled successfully!', 'success');
+}
+
+async function submitCaseUpdate() {
+  closeCaseUpdateModal();
+  showToast('Case updated. Client notified.', 'success');
+}
+
+// ── Notifications toggle
+function toggleNotifications() {
+  document.getElementById('notifDropdown').classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notifDropdown') && !e.target.closest('button[onclick="toggleNotifications()"]')) {
+    document.getElementById('notifDropdown')?.classList.add('hidden');
+  }
+});
+
+// ── Sidebar toggle
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen  = !sidebar.classList.contains('-translate-x-full');
+  sidebar.classList.toggle('-translate-x-full', isOpen);
+  overlay.classList.toggle('hidden', isOpen);
+}
+
+// ── Logout
+function handleLogout() {
+  localStorage.removeItem('ll_session');
+  sessionStorage.removeItem('ll_session');
+  window.location.href = 'login.html';
+}
+
+// ── Toast
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 right-6 z-50 glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
+  t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Init
+renderCases();
+renderHearings();
+renderClients();
+renderActivity();
+renderNotifications();
+</script>
+</body>
+</html>

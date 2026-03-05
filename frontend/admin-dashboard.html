@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'] },
+          animation: {
+            'fade-up':    'fadeUp 0.5s ease-out forwards',
+            'pulse-slow': 'pulse 3s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeUp: { '0%':{ opacity:'0', transform:'translateY(16px)' },'100%':{ opacity:'1', transform:'translateY(0)' }},
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family:'Inter',sans-serif; background:#0a0a0f; color:#e2e8f0; }
+    .glass      { background:rgba(255,255,255,0.05); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); }
+    .glass-dark { background:rgba(10,10,20,0.85);   backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.06); }
+    .gradient-text { background:linear-gradient(135deg,#f87171,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); transition:all 0.3s; }
+    .btn-primary:hover { background:linear-gradient(135deg,#4f46e5,#7c3aed); transform:translateY(-1px); box-shadow:0 8px 30px rgba(99,102,241,0.35); }
+    .btn-red    { background:linear-gradient(135deg,#ef4444,#dc2626); transition:all 0.3s; }
+    .btn-red:hover    { transform:translateY(-1px); box-shadow:0 8px 30px rgba(239,68,68,0.35); }
+    .btn-green  { background:linear-gradient(135deg,#22c55e,#16a34a); transition:all 0.3s; }
+    .btn-green:hover  { transform:translateY(-1px); box-shadow:0 8px 30px rgba(34,197,94,0.35); }
+    .sidebar-link { transition:all 0.2s; border-radius:0.75rem; }
+    .sidebar-link:hover  { background:rgba(255,255,255,0.06); color:#fff; }
+    .sidebar-link.active { background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.25); }
+    .stat-card { transition:transform 0.3s, box-shadow 0.3s; }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(239,68,68,0.1); }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:0.7rem; font-weight:600; }
+    .badge-active   { background:rgba(34,197,94,0.15);  color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
+    .badge-pending  { background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
+    .badge-rejected { background:rgba(239,68,68,0.15);  color:#f87171; border:1px solid rgba(239,68,68,0.25); }
+    .badge-closed   { background:rgba(148,163,184,0.1); color:#94a3b8; border:1px solid rgba(148,163,184,0.15); }
+    .badge-admin    { background:rgba(239,68,68,0.15);  color:#f87171; border:1px solid rgba(239,68,68,0.25); }
+    .badge-judge    { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.25); }
+    .badge-lawyer   { background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.25); }
+    .badge-user     { background:rgba(99,102,241,0.15); color:#a5b4fc; border:1px solid rgba(99,102,241,0.25); }
+    .progress-bar { height:5px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; }
+    .progress-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+    .table-row { transition:background 0.2s; }
+    .table-row:hover { background:rgba(255,255,255,0.04); }
+    .mobile-overlay { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); }
+    .notification-dot { width:8px; height:8px; background:#ef4444; border-radius:50%; position:absolute; top:2px; right:2px; }
+    .tab-btn { transition:all 0.2s; border-radius:0.75rem; }
+    .tab-btn.active { background:rgba(255,255,255,0.1); color:#fff; }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#374151; border-radius:3px; }
+    .danger-zone { border:1px solid rgba(239,68,68,0.2); background:rgba(239,68,68,0.04); }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════ -->
+<aside id="sidebar"
+  class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-red flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-scale-balanced text-white text-xs"></i>
+      </div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Admin Profile -->
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0" id="sidebarAvatar">A</div>
+        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
+          <i class="fas fa-shield-halved text-white" style="font-size:5px"></i>
+        </div>
+      </div>
+      <div class="min-w-0">
+        <p class="text-white font-semibold text-sm truncate" id="sidebarName">System Admin</p>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse-slow"></span>
+          <span class="text-red-400 text-xs font-medium">Super Admin</span>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 glass rounded-xl px-3 py-2 flex items-center gap-2"
+      style="border-color:rgba(239,68,68,0.2); background:rgba(239,68,68,0.06)">
+      <i class="fas fa-circle text-red-400 text-xs animate-pulse-slow"></i>
+      <span class="text-red-300/80 text-xs">Full Platform Control</span>
+    </div>
+  </div>
+
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pb-2">Overview</p>
+    <a href="admin-dashboard.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+      <i class="fas fa-gauge-high w-4 text-center text-red-400"></i> Dashboard
+    </a>
+    <a href="#" onclick="switchTab('analytics')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-chart-line w-4 text-center"></i> Analytics
+    </a>
+
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-2">User Management</p>
+    <a href="#" onclick="switchTab('lawyers')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-user-tie w-4 text-center"></i> Lawyers
+      <span class="ml-auto bg-amber-500/20 text-amber-300 text-xs px-2 py-0.5 rounded-full" id="pendingLawyerCount">3</span>
+    </a>
+    <a href="#" onclick="switchTab('judges')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-gavel w-4 text-center"></i> Judges
+    </a>
+    <a href="#" onclick="switchTab('users')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-users w-4 text-center"></i> Citizens
+    </a>
+
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-2">Platform</p>
+    <a href="#" onclick="switchTab('cases')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-folder-open w-4 text-center"></i> All Cases
+    </a>
+    <a href="#" onclick="switchTab('system')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-server w-4 text-center"></i> System Health
+    </a>
+    <a href="#" onclick="switchTab('logs')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400">
+      <i class="fas fa-scroll w-4 text-center"></i> Audit Logs
+    </a>
+  </nav>
+
+  <div class="px-3 py-4 border-t border-white/5 space-y-0.5">
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400">
+      <i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out
+    </button>
+  </div>
+</aside>
+
+<div id="sidebarOverlay" class="fixed inset-0 z-30 mobile-overlay hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+  <!-- Top Bar -->
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white">
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i>
+      <i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium" id="breadcrumb">Admin Dashboard</span>
+    </div>
+    <!-- Tab Nav (top bar) -->
+    <div class="flex-1 flex items-center gap-1 overflow-x-auto ml-0 sm:ml-6">
+      <button onclick="switchTab('overview')"   id="topTab-overview"   class="tab-btn active text-xs font-medium px-3 py-1.5 text-white whitespace-nowrap">Overview</button>
+      <button onclick="switchTab('lawyers')"    id="topTab-lawyers"    class="tab-btn text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap">Lawyers</button>
+      <button onclick="switchTab('judges')"     id="topTab-judges"     class="tab-btn text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap">Judges</button>
+      <button onclick="switchTab('users')"      id="topTab-users"      class="tab-btn text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap">Citizens</button>
+      <button onclick="switchTab('cases')"      id="topTab-cases"      class="tab-btn text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap">Cases</button>
+      <button onclick="switchTab('system')"     id="topTab-system"     class="tab-btn text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap">System</button>
+      <button onclick="switchTab('logs')"       id="topTab-logs"       class="tab-btn text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap">Logs</button>
+    </div>
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <button onclick="toggleNotifications()" class="relative w-9 h-9 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+        <i class="fas fa-bell text-sm"></i>
+        <span class="notification-dot"></span>
+      </button>
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0" id="topAvatar">A</div>
+    </div>
+  </header>
+
+  <!-- Notifications Dropdown -->
+  <div id="notifDropdown" class="hidden fixed top-16 right-4 z-50 w-80 glass-dark rounded-2xl border border-white/8 shadow-2xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-white font-semibold text-sm">Notifications</h3>
+      <button class="text-red-400 text-xs">Mark all read</button>
+    </div>
+    <div class="divide-y divide-white/5 max-h-72 overflow-y-auto" id="notifList"></div>
+  </div>
+
+  <!-- Tab Content -->
+  <main class="flex-1 overflow-y-auto px-6 py-6">
+
+    <!-- ── TAB: OVERVIEW ── -->
+    <div id="tab-overview" class="space-y-6">
+
+      <!-- Welcome -->
+      <div class="glass rounded-2xl px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        style="background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(234,88,12,0.05)); border-color:rgba(239,68,68,0.2);">
+        <div>
+          <h1 class="text-xl font-black text-white">Admin Control Panel, <span id="welcomeName" class="gradient-text">Admin</span> 🛡️</h1>
+          <p class="text-slate-400 text-sm mt-1">
+            <span class="text-amber-300 font-semibold" id="pendingApprovals">3 lawyer approvals</span> pending ·
+            <span class="text-green-300 font-semibold">248 active users</span> ·
+            <span class="text-indigo-300 font-semibold">12 open cases</span>
+          </p>
+        </div>
+        <div class="flex gap-3 flex-shrink-0">
+          <button onclick="switchTab('lawyers')" class="glass flex items-center gap-2 px-4 py-2.5 rounded-xl text-amber-300 text-sm font-medium hover:bg-amber-500/10 transition-all">
+            <i class="fas fa-user-check text-xs"></i> Review Lawyers
+          </button>
+          <button onclick="openCreateJudgeModal()" class="btn-red flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold">
+            <i class="fas fa-plus text-xs"></i> Create Judge
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass stat-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center">
+              <i class="fas fa-users text-indigo-400 text-sm"></i>
+            </div>
+            <span class="text-green-400 text-xs font-semibold flex items-center gap-1"><i class="fas fa-arrow-up text-xs"></i>+12</span>
+          </div>
+          <div><p class="text-3xl font-black text-white">248</p><p class="text-slate-500 text-xs mt-0.5">Total Citizens</p></div>
+          <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-indigo-500 to-purple-500 w-4/5"></div></div>
+        </div>
+        <div class="glass stat-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/25 flex items-center justify-center">
+              <i class="fas fa-user-tie text-purple-400 text-sm"></i>
+            </div>
+            <span class="text-amber-400 text-xs font-semibold flex items-center gap-1"><i class="fas fa-clock text-xs"></i>3 Pending</span>
+          </div>
+          <div><p class="text-3xl font-black text-white">18</p><p class="text-slate-500 text-xs mt-0.5">Registered Lawyers</p></div>
+          <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-purple-500 to-pink-500 w-3/5"></div></div>
+        </div>
+        <div class="glass stat-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/25 flex items-center justify-center">
+              <i class="fas fa-gavel text-amber-400 text-sm"></i>
+            </div>
+            <span class="text-amber-400 text-xs font-semibold">Active</span>
+          </div>
+          <div><p class="text-3xl font-black text-white">5</p><p class="text-slate-500 text-xs mt-0.5">Active Judges</p></div>
+          <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-amber-400 to-orange-500 w-1/2"></div></div>
+        </div>
+        <div class="glass stat-card rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/25 flex items-center justify-center">
+              <i class="fas fa-folder-open text-red-400 text-sm"></i>
+            </div>
+            <span class="text-red-400 text-xs font-semibold">Platform</span>
+          </div>
+          <div><p class="text-3xl font-black text-white">12</p><p class="text-slate-500 text-xs mt-0.5">Open Cases</p></div>
+          <div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-red-400 to-rose-500 w-2/3"></div></div>
+        </div>
+      </div>
+
+      <!-- Pending Lawyer Approvals + Platform Activity -->
+      <div class="grid lg:grid-cols-3 gap-6">
+
+        <!-- Pending Approvals -->
+        <div class="lg:col-span-2 glass rounded-2xl overflow-hidden">
+          <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+            <div>
+              <h2 class="text-white font-bold text-base">Pending Lawyer Approvals</h2>
+              <p class="text-slate-500 text-xs mt-0.5">Bar Council verification required</p>
+            </div>
+            <span class="badge badge-pending">3 Pending</span>
+          </div>
+          <div class="divide-y divide-white/5" id="pendingLawyersList"></div>
+          <div class="px-6 py-4 border-t border-white/5 text-center">
+            <button onclick="switchTab('lawyers')" class="text-indigo-400 text-xs hover:text-indigo-300 transition-colors">
+              View All Lawyers <i class="fas fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Admin Actions -->
+        <div class="glass rounded-2xl p-6 space-y-4">
+          <h2 class="text-white font-bold text-base">Quick Actions</h2>
+          <div class="space-y-3">
+            <button onclick="openCreateJudgeModal()" class="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:bg-red-500/8 transition-all text-left">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/25 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-gavel text-amber-400 text-sm"></i>
+              </div>
+              <div><p class="text-white text-sm font-semibold">Create Judge</p><p class="text-slate-500 text-xs">Assign new judge account</p></div>
+            </button>
+            <button onclick="switchTab('lawyers')" class="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:bg-purple-500/8 transition-all text-left">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/25 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-user-check text-purple-400 text-sm"></i>
+              </div>
+              <div><p class="text-white text-sm font-semibold">Approve Lawyers</p><p class="text-slate-500 text-xs">3 awaiting review</p></div>
+            </button>
+            <button onclick="switchTab('cases')" class="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:bg-indigo-500/8 transition-all text-left">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-folder-open text-indigo-400 text-sm"></i>
+              </div>
+              <div><p class="text-white text-sm font-semibold">Manage Cases</p><p class="text-slate-500 text-xs">Assign, escalate, close</p></div>
+            </button>
+            <button onclick="switchTab('system')" class="w-full glass rounded-2xl p-4 flex items-center gap-3 hover:bg-green-500/8 transition-all text-left">
+              <div class="w-10 h-10 rounded-xl bg-green-500/20 border border-green-500/25 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-server text-green-400 text-sm"></i>
+              </div>
+              <div><p class="text-white text-sm font-semibold">System Health</p><p class="text-slate-500 text-xs">All services online</p></div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Stats Row -->
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- User Growth -->
+        <div class="glass rounded-2xl p-6 space-y-4">
+          <h2 class="text-white font-bold text-base">User Breakdown</h2>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 flex-shrink-0"></div>
+              <div class="flex-1"><p class="text-slate-400 text-sm">Citizens</p>
+              <div class="progress-bar mt-1"><div class="progress-fill bg-indigo-500 w-[80%]"></div></div></div>
+              <span class="text-white font-bold text-sm">248</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-2.5 h-2.5 rounded-full bg-purple-500 flex-shrink-0"></div>
+              <div class="flex-1"><p class="text-slate-400 text-sm">Lawyers</p>
+              <div class="progress-bar mt-1"><div class="progress-fill bg-purple-500 w-[12%]"></div></div></div>
+              <span class="text-white font-bold text-sm">18</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"></div>
+              <div class="flex-1"><p class="text-slate-400 text-sm">Judges</p>
+              <div class="progress-bar mt-1"><div class="progress-fill bg-amber-500 w-[6%]"></div></div></div>
+              <span class="text-white font-bold text-sm">5</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0"></div>
+              <div class="flex-1"><p class="text-slate-400 text-sm">Admins</p>
+              <div class="progress-bar mt-1"><div class="progress-fill bg-red-500 w-[2%]"></div></div></div>
+              <span class="text-white font-bold text-sm">2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Case Type Distribution -->
+        <div class="glass rounded-2xl p-6 space-y-4">
+          <h2 class="text-white font-bold text-base">Case Distribution</h2>
+          <div class="space-y-3" id="caseDistribution"></div>
+        </div>
+
+        <!-- Recent Platform Activity -->
+        <div class="glass rounded-2xl p-6 space-y-3">
+          <h2 class="text-white font-bold text-base">Platform Activity</h2>
+          <div id="platformActivity" class="space-y-1"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB: LAWYERS ── -->
+    <div id="tab-lawyers" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-white font-bold text-xl">Lawyer Management</h2>
+          <p class="text-slate-500 text-sm mt-0.5">Verify Bar Council credentials and manage lawyer accounts</p>
+        </div>
+        <div class="flex gap-3">
+          <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="text" placeholder="Search lawyers..." oninput="filterLawyers(this.value)"
+              class="bg-white/4 border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-all w-52"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+          <h3 class="text-white font-semibold text-base">Pending Approval</h3>
+          <span class="badge badge-pending">3 Awaiting</span>
+        </div>
+        <div id="lawyersPendingList" class="divide-y divide-white/5"></div>
+      </div>
+
+      <!-- All Lawyers -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5">
+          <h3 class="text-white font-semibold text-base">All Lawyers <span class="text-slate-500 font-normal text-sm ml-2">(18 total)</span></h3>
+        </div>
+        <div id="allLawyersList" class="divide-y divide-white/5"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: JUDGES ── -->
+    <div id="tab-judges" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-white font-bold text-xl">Judge Management</h2>
+          <p class="text-slate-500 text-sm mt-0.5">Create and manage judge accounts — only admins can do this</p>
+        </div>
+        <button onclick="openCreateJudgeModal()" class="btn-red flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold">
+          <i class="fas fa-plus text-xs"></i> Create Judge Account
+        </button>
+      </div>
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-white/5">
+          <h3 class="text-white font-semibold text-base">Active Judges <span class="text-slate-500 font-normal text-sm ml-2">(5 total)</span></h3>
+        </div>
+        <div id="judgesList" class="divide-y divide-white/5"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: USERS ── -->
+    <div id="tab-users" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-white font-bold text-xl">Citizen Accounts</h2>
+          <p class="text-slate-500 text-sm mt-0.5">View and manage all registered citizens</p>
+        </div>
+        <div class="relative">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input type="text" placeholder="Search citizens..." oninput="filterUsers(this.value)"
+            class="bg-white/4 border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-all w-52"/>
+        </div>
+      </div>
+      <div class="glass rounded-2xl overflow-hidden">
+        <div id="usersList" class="divide-y divide-white/5"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: CASES ── -->
+    <div id="tab-cases" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-white font-bold text-xl">All Cases — Platform View</h2>
+          <p class="text-slate-500 text-sm mt-0.5">Assign lawyers, escalate, close or flag any case</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="filterAdminCases('all')"    id="acTab-all"    class="admin-case-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/20 text-red-300 transition-all">All</button>
+          <button onclick="filterAdminCases('active')" id="acTab-active" class="admin-case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white transition-all">Active</button>
+          <button onclick="filterAdminCases('unassigned')" id="acTab-unassigned" class="admin-case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white transition-all">Unassigned</button>
+          <button onclick="filterAdminCases('closed')" id="acTab-closed" class="admin-case-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white transition-all">Closed</button>
+        </div>
+      </div>
+      <div class="glass rounded-2xl overflow-hidden">
+        <div id="adminCasesList" class="divide-y divide-white/5"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: SYSTEM ── -->
+    <div id="tab-system" class="hidden space-y-6">
+      <h2 class="text-white font-bold text-xl">System Health</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="systemServices"></div>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- System Metrics -->
+        <div class="glass rounded-2xl p-6 space-y-4">
+          <h3 class="text-white font-bold text-base">Resource Usage</h3>
+          <div class="space-y-4" id="systemMetrics"></div>
+        </div>
+        <!-- Danger Zone -->
+        <div class="danger-zone rounded-2xl p-6 space-y-4">
+          <div class="flex items-center gap-3">
+            <i class="fas fa-triangle-exclamation text-red-400"></i>
+            <h3 class="text-red-300 font-bold text-base">Danger Zone</h3>
+          </div>
+          <p class="text-slate-500 text-xs">These actions are irreversible. Proceed with extreme caution.</p>
+          <div class="space-y-3">
+            <button onclick="confirmDanger('flush-cache')" class="w-full glass rounded-xl py-2.5 px-4 text-sm text-amber-300 hover:bg-amber-500/10 transition-all flex items-center justify-between">
+              <span><i class="fas fa-broom mr-2"></i>Flush Cache</span>
+              <i class="fas fa-arrow-right text-xs text-slate-500"></i>
+            </button>
+            <button onclick="confirmDanger('reset-sessions')" class="w-full glass rounded-xl py-2.5 px-4 text-sm text-orange-300 hover:bg-orange-500/10 transition-all flex items-center justify-between">
+              <span><i class="fas fa-rotate mr-2"></i>Reset All Sessions</span>
+              <i class="fas fa-arrow-right text-xs text-slate-500"></i>
+            </button>
+            <button onclick="confirmDanger('maintenance')" class="w-full glass rounded-xl py-2.5 px-4 text-sm text-red-300 hover:bg-red-500/10 transition-all flex items-center justify-between">
+              <span><i class="fas fa-power-off mr-2"></i>Maintenance Mode</span>
+              <i class="fas fa-arrow-right text-xs text-slate-500"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: LOGS ── -->
+    <div id="tab-logs" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-white font-bold text-xl">Audit Logs</h2>
+        <div class="flex gap-3">
+          <select class="bg-white/4 border border-white/8 rounded-xl px-4 py-2 text-sm text-slate-300 focus:outline-none">
+            <option class="bg-slate-900">All Events</option>
+            <option class="bg-slate-900">Auth Events</option>
+            <option class="bg-slate-900">Case Events</option>
+            <option class="bg-slate-900">User Events</option>
+          </select>
+          <button class="glass rounded-xl px-4 py-2 text-sm text-slate-300 hover:text-white flex items-center gap-2">
+            <i class="fas fa-download text-xs"></i> Export
+          </button>
+        </div>
+      </div>
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="divide-y divide-white/5" id="auditLogs"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CREATE JUDGE MODAL
+═══════════════════════════════════════════ -->
+<div id="createJudgeModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCreateJudgeModal()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-md relative z-10 animate-fade-up">
+    <div class="px-7 py-5 border-b border-white/5 flex items-center justify-between">
+      <div>
+        <h3 class="text-white font-bold text-lg">Create Judge Account</h3>
+        <p class="text-slate-500 text-xs mt-0.5">Only admins can create judge accounts</p>
+      </div>
+      <button onclick="closeCreateJudgeModal()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-7 space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Full Name</label>
+          <input id="judgeName" type="text" placeholder="Justice Full Name"
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-all"/>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Email</label>
+          <input id="judgeEmail" type="email" placeholder="judge@court.gov.in"
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-all"/>
+        </div>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Court / Jurisdiction</label>
+        <input id="judgeJuris" type="text" placeholder="e.g. Delhi High Court"
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-all"/>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Specialization</label>
+        <select id="judgeSpec" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-red-500/50 transition-all">
+          <option class="bg-slate-900">Civil Law</option>
+          <option class="bg-slate-900">Criminal Law</option>
+          <option class="bg-slate-900">Family Law</option>
+          <option class="bg-slate-900">Property Law</option>
+          <option class="bg-slate-900">Labour Law</option>
+          <option class="bg-slate-900">Constitutional Law</option>
+        </select>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-sm font-medium">Temporary Password</label>
+        <div class="relative">
+          <input id="judgePassword" type="text" value="Judge@2026#Temp"
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 pr-10 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-all font-mono"/>
+          <button onclick="generatePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+            <i class="fas fa-rotate text-sm"></i>
+          </button>
+        </div>
+      </div>
+      <div class="glass rounded-xl p-3 flex items-start gap-2 border border-amber-500/20 bg-amber-500/5">
+        <i class="fas fa-triangle-exclamation text-amber-400 text-xs mt-0.5"></i>
+        <p class="text-amber-300/80 text-xs">The judge will receive login credentials via email. They must change the password on first login.</p>
+      </div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeCreateJudgeModal()" class="flex-1 glass rounded-xl py-3 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium">Cancel</button>
+        <button onclick="submitCreateJudge()" class="flex-1 btn-red rounded-xl py-3 text-sm text-white font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-gavel text-xs"></i> Create Account
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lawyer Review Modal -->
+<div id="lawyerReviewModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeLawyerReviewModal()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-md relative z-10 animate-fade-up" id="lawyerReviewContent"></div>
+</div>
+
+<!-- Danger Confirm Modal -->
+<div id="dangerModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDangerModal()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-sm relative z-10 animate-fade-up p-8 space-y-5">
+    <div class="text-center">
+      <div class="w-14 h-14 rounded-2xl bg-red-500/20 border border-red-500/25 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-triangle-exclamation text-red-400 text-xl"></i>
+      </div>
+      <h3 class="text-white font-bold text-lg" id="dangerTitle">Confirm Action</h3>
+      <p class="text-slate-400 text-sm mt-2" id="dangerDesc">This action cannot be undone.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeDangerModal()" class="flex-1 glass rounded-xl py-3 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium">Cancel</button>
+      <button onclick="executeDanger()" class="flex-1 btn-red rounded-xl py-3 text-sm text-white font-semibold">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script>
+// ── Session Guard
+const session = JSON.parse(
+  localStorage.getItem('ll_session') ||
+  sessionStorage.getItem('ll_session') || 'null'
+);
+if (!session || !session.token) { window.location.href = 'login.html'; }
+// Phase 6: if (session?.role !== 'admin') { window.location.href = 'dashboard.html'; }
+
+if (session) {
+  const init = session.name?.charAt(0).toUpperCase() || 'A';
+  document.getElementById('welcomeName').textContent   = session.name?.split(' ')[0] || 'Admin';
+  document.getElementById('sidebarName').textContent   = session.name || 'System Admin';
+  document.getElementById('sidebarAvatar').textContent  = init;
+  document.getElementById('topAvatar').textContent      = init;
+}
+
+// ── Mock Data
+const PENDING_LAWYERS = [
+  { id:'L001', name:'Adv. Vikram Nair',   email:'vikram@legal.in', barId:'BAR/DL/2019/4521', spec:'Criminal Law',   city:'Delhi',   docs:true  },
+  { id:'L002', name:'Adv. Kavya Reddy',   email:'kavya@lawfirm.in',barId:'BAR/MH/2021/7832', spec:'Family Law',     city:'Mumbai',  docs:true  },
+  { id:'L003', name:'Adv. Anand Pillai',  email:'anand@legal.com', barId:'BAR/KA/2020/3310', spec:'Property Law',   city:'Bangalore',docs:false },
+];
+
+const ALL_LAWYERS = [
+  { id:'L004', name:'Adv. Priya Singh',   email:'lawyer@demo.com', barId:'BAR/DL/2018/1234', spec:'Property & Civil',status:'verified', cases:4, city:'Delhi'    },
+  { id:'L005', name:'Adv. R. Kapoor',     email:'rkapoor@law.in',  barId:'BAR/DL/2016/0981', spec:'Consumer Law',   status:'verified', cases:7, city:'Delhi'    },
+  { id:'L006', name:'Adv. S. Mehta',      email:'smehta@legal.in', barId:'BAR/MH/2017/5543', spec:'Labour Law',     status:'verified', cases:3, city:'Mumbai'   },
+  { id:'L007', name:'Adv. N. Verma',      email:'nverma@firm.in',  barId:'BAR/DL/2020/8821', spec:'Family Law',     status:'verified', cases:5, city:'Delhi'    },
+  { id:'L008', name:'Adv. P. Kumar',      email:'pkumar@law.com',  barId:'BAR/UP/2019/2267', spec:'RTI & Admin',    status:'suspended',cases:0, city:'Lucknow'  },
+];
+
+const JUDGES = [
+  { id:'J001', name:'Justice R. Mehta',   email:'judge@demo.com',  court:'Delhi High Court',    spec:'Civil Law',     cases:12, created:'Jan 2025'  },
+  { id:'J002', name:'Justice A. Sharma',  email:'asharma@court.in',court:'Tis Hazari DC',        spec:'Criminal Law',  cases:8,  created:'Mar 2025'  },
+  { id:'J003', name:'Justice P. Iyer',    email:'piyer@court.in',  court:'Family Court, Saket',  spec:'Family Law',    cases:6,  created:'May 2025'  },
+  { id:'J004', name:'Justice M. Gupta',   email:'mgupta@court.in', court:'District Court, Dwarka',spec:'Consumer Law', cases:9,  created:'Aug 2025'  },
+  { id:'J005', name:'Justice S. Bose',    email:'sbose@court.in',  court:'Labour Court, Delhi',  spec:'Labour Law',    cases:4,  created:'Nov 2025'  },
+];
+
+const CITIZENS = [
+  { id:'U001', name:'Rahul Sharma',   email:'user@demo.com',    cases:3, joined:'15 Jan 2026', status:'active'    },
+  { id:'U002', name:'Sunita Verma',   email:'sverma@gmail.com', cases:1, joined:'28 Jan 2026', status:'active'    },
+  { id:'U003', name:'Mohan Das',      email:'mdas@gmail.com',   cases:1, joined:'5 Feb 2026',  status:'active'    },
+  { id:'U004', name:'Anita Kapoor',   email:'akapoor@yahoo.in', cases:1, joined:'12 Feb 2026', status:'active'    },
+  { id:'U005', name:'Meera Singh',    email:'msingh@gmail.com', cases:1, joined:'18 Feb 2026', status:'active'    },
+  { id:'U006', name:'Aakash Joshi',   email:'ajoshi@hotmail.com',cases:1,joined:'22 Feb 2026', status:'active'    },
+  { id:'U007', name:'Ramesh Gupta',   email:'rgupta@gmail.com', cases:2, joined:'1 Mar 2026',  status:'active'    },
+  { id:'U008', name:'Dev Sharma',     email:'dsharma@gmail.com',cases:1, joined:'2 Mar 2026',  status:'suspended' },
+];
+
+const ADMIN_CASES = [
+  { id:'LL-2025-089', title:'Rent Deposit Dispute',         type:'Property', citizen:'Rahul Sharma',  lawyer:'Adv. Priya Singh', status:'active',     priority:'high'   },
+  { id:'LL-2025-102', title:'Consumer Complaint',          type:'Consumer', citizen:'Sunita Verma',  lawyer:'Adv. R. Kapoor',   status:'active',     priority:'medium' },
+  { id:'LL-2026-014', title:'Flat Ownership Dispute',      type:'Property', citizen:'Mohan Das',     lawyer:'Adv. Priya Singh', status:'active',     priority:'high'   },
+  { id:'LL-2026-031', title:'Wrongful Termination',        type:'Labour',   citizen:'Anita Kapoor',  lawyer:'Adv. S. Mehta',    status:'closed',     priority:'low'    },
+  { id:'LL-2026-045', title:'DV Protection Order',         type:'Family',   citizen:'Meera Singh',   lawyer:'Adv. N. Verma',    status:'active',     priority:'high'   },
+  { id:'LL-2026-052', title:'RTI Non-Compliance',          type:'RTI',      citizen:'Aakash Joshi',  lawyer:'Unassigned',       status:'unassigned', priority:'medium' },
+  { id:'LL-2025-071', title:'Cheque Bounce — NI Act',      type:'Criminal', citizen:'Ramesh Gupta',  lawyer:'Adv. R. Kapoor',   status:'active',     priority:'medium' },
+  { id:'LL-2026-073', title:'Property Inheritance Dispute',type:'Property', citizen:'Dev Sharma',    lawyer:'Unassigned',       status:'unassigned', priority:'low'    },
+];
+
+const SYSTEM_SERVICES = [
+  { name:'API Server',        status:'online',  uptime:'99.9%', icon:'fa-server',         color:'green'   },
+  { name:'Database (PG)',     status:'online',  uptime:'99.8%', icon:'fa-database',       color:'green'   },
+  { name:'Auth Service',      status:'online',  uptime:'100%',  icon:'fa-shield-halved',  color:'green'   },
+  { name:'File Storage',      status:'online',  uptime:'99.5%', icon:'fa-hard-drive',     color:'green'   },
+  { name:'AI Service',        status:'degraded',uptime:'94.2%', icon:'fa-robot',          color:'amber'   },
+  { name:'Email Service',     status:'online',  uptime:'99.1%', icon:'fa-envelope',       color:'green'   },
+];
+
+const SYSTEM_METRICS = [
+  { label:'CPU Usage',    value:34, color:'from-green-400 to-emerald-500'  },
+  { label:'RAM Usage',    value:61, color:'from-amber-400 to-orange-500'   },
+  { label:'Disk Usage',   value:28, color:'from-indigo-500 to-purple-500'  },
+  { label:'DB Connections',value:15,color:'from-blue-400 to-cyan-500'      },
+];
+
+const AUDIT_LOGS = [
+  { time:'9:14 PM', user:'admin@demo.com',   role:'admin',  event:'LAWYER_APPROVED',    detail:'Adv. Priya Singh verified',     ip:'103.21.x.x'  },
+  { time:'8:52 PM', user:'judge@demo.com',   role:'judge',  event:'OUTCOME_RECORDED',   detail:'LL-2025-089 — Adjourned',        ip:'122.15.x.x'  },
+  { time:'7:30 PM', user:'lawyer@demo.com',  role:'lawyer', event:'CASE_UPDATED',       detail:'LL-2025-102 → In Review',        ip:'49.36.x.x'   },
+  { time:'6:18 PM', user:'user@demo.com',    role:'user',   event:'CASE_OPENED',        detail:'New case LL-2026-073 filed',     ip:'117.55.x.x'  },
+  { time:'5:45 PM', user:'admin@demo.com',   role:'admin',  event:'JUDGE_CREATED',      detail:'Justice S. Bose account created',ip:'103.21.x.x'  },
+  { time:'4:22 PM', user:'user@demo.com',    role:'user',   event:'DOCUMENT_UPLOADED',  detail:'Sale Agreement.pdf — 2.4MB',     ip:'117.55.x.x'  },
+  { time:'3:10 PM', user:'lawyer@demo.com',  role:'lawyer', event:'LOGIN',              detail:'Successful login',               ip:'49.36.x.x'   },
+  { time:'2:47 PM', user:'unknown',          role:'—',      event:'LOGIN_FAILED',       detail:'3 failed attempts',              ip:'185.220.x.x' },
+  { time:'1:33 PM', user:'judge@demo.com',   role:'judge',  event:'HEARING_SCHEDULED',  detail:'LL-2026-014 — 8 Mar 2026',      ip:'122.15.x.x'  },
+  { time:'12:05 PM',user:'admin@demo.com',   role:'admin',  event:'CACHE_FLUSHED',      detail:'System cache cleared',           ip:'103.21.x.x'  },
+];
+
+const PLATFORM_ACTIVITY = [
+  { icon:'fa-user-plus',    color:'text-green-400',  text:'New citizen registered',   time:'4m ago'  },
+  { icon:'fa-user-check',   color:'text-purple-400', text:'Lawyer approved',          time:'1h ago'  },
+  { icon:'fa-folder-plus',  color:'text-indigo-400', text:'New case filed',           time:'2h ago'  },
+  { icon:'fa-gavel',        color:'text-amber-400',  text:'Hearing scheduled',        time:'3h ago'  },
+  { icon:'fa-stamp',        color:'text-red-400',    text:'Outcome recorded',         time:'5h ago'  },
+];
+
+const CASE_DIST = [
+  { type:'Property', pct:42, color:'from-amber-400 to-orange-500'  },
+  { type:'Family',   pct:17, color:'from-pink-400 to-rose-500'     },
+  { type:'Labour',   pct:17, color:'from-blue-400 to-indigo-500'   },
+  { type:'Consumer', pct:8,  color:'from-green-400 to-emerald-500' },
+  { type:'Criminal', pct:8,  color:'from-red-400 to-rose-600'      },
+  { type:'Other',    pct:8,  color:'from-purple-400 to-violet-500' },
+];
+
+const MOCK_NOTIFS = [
+  { icon:'fa-user-check',  color:'text-amber-400', title:'3 Lawyers Pending',   body:'Bar Council verification needed',  time:'1h ago',  unread:true  },
+  { icon:'fa-shield-halved',color:'text-red-400',  title:'Suspicious Login',     body:'3 failed attempts — 185.x.x.x',  time:'2h ago',  unread:true  },
+  { icon:'fa-robot',       color:'text-amber-400', title:'AI Service Degraded', body:'Uptime dropped to 94.2%',          time:'3h ago',  unread:false },
+];
+
+let activeAdminCaseFilter = 'all';
+let pendingDangerAction   = '';
+
+// ── Tab switching
+const TABS = ['overview','lawyers','judges','users','cases','system','logs'];
+function switchTab(name) {
+  TABS.forEach(t => {
+    document.getElementById('tab-' + t)?.classList.add('hidden');
+    const topBtn = document.getElementById('topTab-' + t);
+    if (topBtn) { topBtn.classList.remove('active'); topBtn.classList.add('text-slate-500'); topBtn.classList.remove('text-white'); }
+  });
+  document.getElementById('tab-' + name)?.classList.remove('hidden');
+  const activeBtn = document.getElementById('topTab-' + name);
+  if (activeBtn) { activeBtn.classList.add('active','text-white'); activeBtn.classList.remove('text-slate-500'); }
+  const crumbs = { overview:'Admin Dashboard', lawyers:'Lawyer Management', judges:'Judge Management', users:'Citizens', cases:'All Cases', system:'System Health', logs:'Audit Logs' };
+  document.getElementById('breadcrumb').textContent = crumbs[name] || name;
+  // Lazy render tabs on first switch
+  if (name === 'lawyers')  { renderLawyersPending(); renderAllLawyers(); }
+  if (name === 'judges')   { renderJudges(); }
+  if (name === 'users')    { renderUsers(); }
+  if (name === 'cases')    { renderAdminCases(); }
+  if (name === 'system')   { renderSystemServices(); renderSystemMetrics(); }
+  if (name === 'logs')     { renderAuditLogs(); }
+}
+
+// ── Render Pending Lawyers (Overview)
+function renderPendingLawyersOverview() {
+  document.getElementById('pendingLawyersList').innerHTML = PENDING_LAWYERS.map(l => `
+    <div class="table-row px-6 py-4 flex items-center gap-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${l.name.charAt(5)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold">${l.name}</p>
+        <p class="text-slate-500 text-xs mt-0.5">${l.email} · ${l.barId} · ${l.spec}</p>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        ${l.docs ? `<span class="badge badge-active text-xs"><i class="fas fa-check text-xs"></i> Docs</span>` : `<span class="badge badge-rejected text-xs"><i class="fas fa-times text-xs"></i> Missing</span>`}
+        <button onclick="openLawyerReview('${l.id}')" class="glass px-3 py-1.5 rounded-lg text-xs text-indigo-300 hover:bg-indigo-500/10 transition-all font-medium">Review</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Render Lawyers tab
+function renderLawyersPending(query = '') {
+  const filtered = PENDING_LAWYERS.filter(l => !query || l.name.toLowerCase().includes(query.toLowerCase()) || l.email.toLowerCase().includes(query));
+  document.getElementById('lawyersPendingList').innerHTML = filtered.map(l => `
+    <div class="table-row px-6 py-4 flex items-center gap-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${l.name.charAt(5)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold">${l.name}</p>
+        <p class="text-slate-500 text-xs">${l.barId} · ${l.spec} · ${l.city}</p>
+        <p class="text-slate-600 text-xs">${l.email}</p>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        ${l.docs ? `<span class="badge badge-active"><i class="fas fa-file-check text-xs"></i>Docs OK</span>` : `<span class="badge badge-rejected"><i class="fas fa-times text-xs"></i>Docs Missing</span>`}
+        <button onclick="openLawyerReview('${l.id}')" class="btn-primary px-3 py-1.5 rounded-lg text-xs text-white font-medium">Review →</button>
+      </div>
+    </div>
+  `).join('') || `<div class="px-6 py-8 text-center text-slate-500 text-sm">No pending approvals.</div>`;
+}
+
+function renderAllLawyers(query = '') {
+  const filtered = ALL_LAWYERS.filter(l => !query || l.name.toLowerCase().includes(query.toLowerCase()) || l.email.toLowerCase().includes(query));
+  document.getElementById('allLawyersList').innerHTML = filtered.map(l => `
+    <div class="table-row px-6 py-4 flex items-center gap-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-violet-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${l.name.charAt(5)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold">${l.name}</p>
+        <p class="text-slate-500 text-xs">${l.barId} · ${l.spec} · ${l.city}</p>
+        <p class="text-slate-600 text-xs">${l.email}</p>
+      </div>
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <span class="text-slate-500 text-xs">${l.cases} cases</span>
+        <span class="badge ${l.status==='verified'?'badge-active':'badge-rejected'}">${l.status.charAt(0).toUpperCase()+l.status.slice(1)}</span>
+        <button onclick="toggleLawyerStatus('${l.id}','${l.status}')" class="glass px-3 py-1.5 rounded-lg text-xs ${l.status==='verified'?'text-red-300 hover:bg-red-500/10':'text-green-300 hover:bg-green-500/10'} transition-all font-medium">
+          ${l.status==='verified'?'Suspend':'Reinstate'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterLawyers(q) { renderLawyersPending(q); renderAllLawyers(q); }
+
+// ── Render Judges
+function renderJudges() {
+  document.getElementById('judgesList').innerHTML = JUDGES.map(j => `
+    <div class="table-row px-6 py-4 flex items-center gap-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${j.name.charAt(8)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold">${j.name}</p>
+        <p class="text-slate-500 text-xs">${j.court} · ${j.spec}</p>
+        <p class="text-slate-600 text-xs">${j.email}</p>
+      </div>
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <span class="text-slate-500 text-xs">${j.cases} cases</span>
+        <span class="badge badge-judge">Judge</span>
+        <span class="text-slate-600 text-xs">Since ${j.created}</span>
+        <button onclick="confirmRemoveJudge('${j.id}')" class="glass px-3 py-1.5 rounded-lg text-xs text-red-300 hover:bg-red-500/10 transition-all font-medium">Remove</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Render Citizens
+function renderUsers(query = '') {
+  const filtered = CITIZENS.filter(u => !query || u.name.toLowerCase().includes(query.toLowerCase()) || u.email.toLowerCase().includes(query));
+  document.getElementById('usersList').innerHTML = filtered.map(u => `
+    <div class="table-row px-6 py-4 flex items-center gap-4">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${u.name.charAt(0)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold">${u.name}</p>
+        <p class="text-slate-500 text-xs">${u.email} · Joined ${u.joined}</p>
+      </div>
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <span class="text-slate-500 text-xs">${u.cases} case${u.cases!==1?'s':''}</span>
+        <span class="badge ${u.status==='active'?'badge-active':'badge-rejected'}">${u.status.charAt(0).toUpperCase()+u.status.slice(1)}</span>
+        <button class="glass px-3 py-1.5 rounded-lg text-xs ${u.status==='active'?'text-red-300 hover:bg-red-500/10':'text-green-300 hover:bg-green-500/10'} transition-all font-medium">
+          ${u.status==='active'?'Suspend':'Restore'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+function filterUsers(q) { renderUsers(q); }
+
+// ── Render Admin Cases
+function renderAdminCases(filter = 'all') {
+  const filtered = filter === 'all' ? ADMIN_CASES : ADMIN_CASES.filter(c => c.status === filter);
+  document.getElementById('adminCasesList').innerHTML = filtered.map(c => `
+    <div class="table-row px-6 py-4 flex items-center gap-4">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        c.status==='active'     ?'bg-green-500/15 border border-green-500/25':
+        c.status==='unassigned' ?'bg-amber-500/15 border border-amber-500/25':
+                                 'bg-slate-500/15 border border-slate-500/25'
+      }">
+        <i class="fas fa-folder text-sm ${c.status==='active'?'text-green-400':c.status==='unassigned'?'text-amber-400':'text-slate-400'}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold truncate">${c.title}</p>
+        <p class="text-slate-500 text-xs mt-0.5">#${c.id} · ${c.type} · Citizen: ${c.citizen}</p>
+        <p class="text-slate-600 text-xs">Lawyer: <span class="${c.lawyer==='Unassigned'?'text-amber-400':'text-slate-400'}">${c.lawyer}</span></p>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <span class="badge ${c.priority==='high'?'badge-rejected':c.priority==='medium'?'badge-pending':'badge-closed'}">${c.priority}</span>
+        <span class="badge ${c.status==='active'?'badge-active':c.status==='unassigned'?'badge-pending':'badge-closed'}">${c.status}</span>
+        ${c.status==='unassigned' ? `<button onclick="assignLawyer('${c.id}')" class="btn-primary px-3 py-1.5 rounded-lg text-xs text-white font-medium">Assign</button>` : ''}
+      </div>
+    </div>
+  `).join('') || `<div class="px-6 py-8 text-center text-slate-500 text-sm">No cases found.</div>`;
+}
+
+function filterAdminCases(filter) {
+  activeAdminCaseFilter = filter;
+  document.querySelectorAll('.admin-case-tab').forEach(b => { b.classList.remove('bg-red-500/20','text-red-300'); b.classList.add('text-slate-500'); });
+  const t = document.getElementById('acTab-'+filter);
+  if (t) { t.classList.add('bg-red-500/20','text-red-300'); t.classList.remove('text-slate-500'); }
+  renderAdminCases(filter);
+}
+
+// ── Render System Services
+function renderSystemServices() {
+  document.getElementById('systemServices').innerHTML = SYSTEM_SERVICES.map(s => `
+    <div class="glass rounded-2xl p-5 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-xl ${s.color==='green'?'bg-green-500/20 border border-green-500/25':'bg-amber-500/20 border border-amber-500/25'} flex items-center justify-center flex-shrink-0">
+        <i class="fas ${s.icon} ${s.color==='green'?'text-green-400':'text-amber-400'}"></i>
+      </div>
+      <div class="flex-1">
+        <div class="flex justify-between items-center">
+          <p class="text-white font-semibold text-sm">${s.name}</p>
+          <span class="badge ${s.color==='green'?'badge-active':'badge-pending'}">${s.status}</span>
+        </div>
+        <p class="text-slate-500 text-xs mt-0.5">Uptime: ${s.uptime}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSystemMetrics() {
+  document.getElementById('systemMetrics').innerHTML = SYSTEM_METRICS.map(m => `
+    <div class="space-y-1.5">
+      <div class="flex justify-between text-xs">
+        <span class="text-slate-400">${m.label}</span>
+        <span class="text-white font-semibold">${m.value}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill bg-gradient-to-r ${m.color}" style="width:${m.value}%"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Render Audit Logs
+function renderAuditLogs() {
+  const EVENT_COLORS = {
+    LAWYER_APPROVED:'text-green-400', OUTCOME_RECORDED:'text-amber-400', CASE_UPDATED:'text-indigo-400',
+    CASE_OPENED:'text-purple-400', JUDGE_CREATED:'text-red-400', DOCUMENT_UPLOADED:'text-blue-400',
+    LOGIN:'text-slate-400', LOGIN_FAILED:'text-red-500', HEARING_SCHEDULED:'text-amber-400', CACHE_FLUSHED:'text-orange-400',
+  };
+  document.getElementById('auditLogs').innerHTML = AUDIT_LOGS.map(l => `
+    <div class="table-row px-6 py-3.5 flex items-center gap-4">
+      <span class="text-slate-600 text-xs font-mono flex-shrink-0 w-16">${l.time}</span>
+      <span class="badge badge-${l.role==='admin'?'admin':l.role==='judge'?'judge':l.role==='lawyer'?'lawyer':'user'} flex-shrink-0">${l.role}</span>
+      <span class="font-mono text-xs ${EVENT_COLORS[l.event]||'text-slate-400'} flex-shrink-0 w-36">${l.event}</span>
+      <span class="text-slate-400 text-xs flex-1 truncate">${l.detail}</span>
+      <span class="text-slate-700 text-xs font-mono flex-shrink-0">${l.ip}</span>
+    </div>
+  `).join('');
+}
+
+// ── Platform Activity + Case Distribution (Overview)
+function renderPlatformActivity() {
+  document.getElementById('platformActivity').innerHTML = PLATFORM_ACTIVITY.map(a => `
+    <div class="flex items-center gap-3 py-2">
+      <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+        <i class="fas ${a.icon} text-xs ${a.color}"></i>
+      </div>
+      <span class="text-slate-400 text-sm flex-1">${a.text}</span>
+      <span class="text-slate-600 text-xs">${a.time}</span>
+    </div>
+  `).join('');
+}
+
+function renderCaseDistribution() {
+  document.getElementById('caseDistribution').innerHTML = CASE_DIST.map(c => `
+    <div class="space-y-1.5">
+      <div class="flex justify-between text-xs">
+        <span class="text-slate-400">${c.type}</span>
+        <span class="text-white font-semibold">${c.pct}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill bg-gradient-to-r ${c.color}" style="width:${c.pct}%"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Notifications
+function renderNotifications() {
+  document.getElementById('notifList').innerHTML = MOCK_NOTIFS.map(n => `
+    <div class="px-5 py-3.5 flex items-start gap-3 hover:bg-white/4 transition-colors ${n.unread?'bg-white/[0.02]':''}">
+      <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <i class="fas ${n.icon} text-xs ${n.color}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-xs font-semibold">${n.title}</p>
+        <p class="text-slate-500 text-xs truncate">${n.body}</p>
+        <p class="text-slate-700 text-xs mt-0.5">${n.time}</p>
+      </div>
+      ${n.unread?'<div class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0 mt-1.5"></div>':''}
+    </div>
+  `).join('');
+}
+
+// ── Lawyer Review Modal
+function openLawyerReview(id) {
+  const l = PENDING_LAWYERS.find(x => x.id === id);
+  if (!l) return;
+  document.getElementById('lawyerReviewContent').innerHTML = `
+    <div class="px-7 py-5 border-b border-white/5 flex items-center justify-between">
+      <h3 class="text-white font-bold text-lg">Review Lawyer</h3>
+      <button onclick="closeLawyerReviewModal()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-7 space-y-5">
+      <div class="glass rounded-2xl p-5 space-y-3">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-base">${l.name.charAt(5)}</div>
+          <div>
+            <p class="text-white font-bold text-base">${l.name}</p>
+            <p class="text-slate-400 text-sm">${l.email}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div><p class="text-slate-500 text-xs">Bar ID</p><p class="text-white font-mono text-xs">${l.barId}</p></div>
+          <div><p class="text-slate-500 text-xs">Specialization</p><p class="text-white">${l.spec}</p></div>
+          <div><p class="text-slate-500 text-xs">City</p><p class="text-white">${l.city}</p></div>
+          <div><p class="text-slate-500 text-xs">Documents</p>
+            <span class="badge ${l.docs?'badge-active':'badge-rejected'}">${l.docs?'Submitted':'Missing'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="rejectLawyer('${l.id}')" class="flex-1 btn-red rounded-xl py-3 text-sm text-white font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-times text-xs"></i> Reject
+        </button>
+        <button onclick="approveLawyer('${l.id}')" class="flex-1 btn-green rounded-xl py-3 text-sm text-white font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-check text-xs"></i> Approve
+        </button>
+      </div>
+    </div>
+  `;
+  document.getElementById('lawyerReviewModal').classList.remove('hidden');
+}
+function closeLawyerReviewModal() { document.getElementById('lawyerReviewModal').classList.add('hidden'); }
+
+function approveLawyer(id) {
+  closeLawyerReviewModal();
+  const idx = PENDING_LAWYERS.findIndex(l => l.id === id);
+  if (idx > -1) PENDING_LAWYERS.splice(idx,1);
+  renderPendingLawyersOverview();
+  renderLawyersPending();
+  document.getElementById('pendingLawyerCount').textContent = PENDING_LAWYERS.length;
+  showToast('Lawyer approved and notified via email.', 'success');
+}
+
+function rejectLawyer(id) {
+  closeLawyerReviewModal();
+  const idx = PENDING_LAWYERS.findIndex(l => l.id === id);
+  if (idx > -1) PENDING_LAWYERS.splice(idx,1);
+  renderPendingLawyersOverview();
+  renderLawyersPending();
+  document.getElementById('pendingLawyerCount').textContent = PENDING_LAWYERS.length;
+  showToast('Lawyer application rejected.', 'error');
+}
+
+function toggleLawyerStatus(id, status) {
+  const l = ALL_LAWYERS.find(x => x.id === id);
+  if (l) l.status = status === 'verified' ? 'suspended' : 'verified';
+  renderAllLawyers();
+  showToast(status === 'verified' ? 'Lawyer suspended.' : 'Lawyer reinstated.', status === 'verified' ? 'error' : 'success');
+}
+
+function confirmRemoveJudge(id) {
+  if (confirm('Remove this judge account? This cannot be undone.')) {
+    const idx = JUDGES.findIndex(j => j.id === id);
+    if (idx > -1) JUDGES.splice(idx,1);
+    renderJudges();
+    showToast('Judge account removed.', 'error');
+  }
+}
+
+function assignLawyer(caseId) {
+  showToast(`Lawyer assignment modal coming in Phase 5 (backend).`, 'success');
+}
+
+// ── Create Judge
+function openCreateJudgeModal() { document.getElementById('createJudgeModal').classList.remove('hidden'); }
+function closeCreateJudgeModal() { document.getElementById('createJudgeModal').classList.add('hidden'); }
+
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
+  let pwd = '';
+  for (let i=0; i<12; i++) pwd += chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('judgePassword').value = pwd;
+}
+
+function submitCreateJudge() {
+  const name  = document.getElementById('judgeName').value.trim();
+  const email = document.getElementById('judgeEmail').value.trim();
+  const juris = document.getElementById('judgeJuris').value.trim();
+  if (!name || !email || !juris) {
+    showToast('Please fill all required fields.', 'error');
+    return;
+  }
+  JUDGES.unshift({ id:'J00'+(JUDGES.length+1), name, email, court:juris, spec:document.getElementById('judgeSpec').value, cases:0, created:'Mar 2026' });
+  closeCreateJudgeModal();
+  if (!document.getElementById('tab-judges').classList.contains('hidden')) renderJudges();
+  showToast(`Judge account created for ${name}.`, 'success');
+}
+
+// ── Danger Zone
+function confirmDanger(action) {
+  pendingDangerAction = action;
+  const messages = {
+    'flush-cache':     ['Flush System Cache?',        'All cached data will be cleared. This may cause brief slowdowns.'],
+    'reset-sessions':  ['Reset All Sessions?',        'All users will be logged out immediately including active sessions.'],
+    'maintenance':     ['Enable Maintenance Mode?',   'The platform will be inaccessible to all users until disabled.'],
+  };
+  const [title, desc] = messages[action] || ['Confirm?','This action cannot be undone.'];
+  document.getElementById('dangerTitle').textContent = title;
+  document.getElementById('dangerDesc').textContent  = desc;
+  document.getElementById('dangerModal').classList.remove('hidden');
+}
+function closeDangerModal() { document.getElementById('dangerModal').classList.add('hidden'); pendingDangerAction = ''; }
+function executeDanger() {
+  closeDangerModal();
+  const msgs = { 'flush-cache':'Cache flushed successfully.','reset-sessions':'All sessions have been terminated.','maintenance':'Maintenance mode enabled.' };
+  showToast(msgs[pendingDangerAction] || 'Action completed.', 'success');
+}
+
+// ── Shared utilities
+function toggleNotifications() { document.getElementById('notifDropdown').classList.toggle('hidden'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notifDropdown') && !e.target.closest('button[onclick="toggleNotifications()"]'))
+    document.getElementById('notifDropdown')?.classList.add('hidden');
+});
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen  = !sidebar.classList.contains('-translate-x-full');
+  sidebar.classList.toggle('-translate-x-full', isOpen);
+  overlay.classList.toggle('hidden', isOpen);
+}
+
+function handleLogout() {
+  localStorage.removeItem('ll_session');
+  sessionStorage.removeItem('ll_session');
+  window.location.href = 'login.html';
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
+  t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Init
+renderPendingLawyersOverview();
+renderPlatformActivity();
+renderCaseDistribution();
+renderNotifications();
+</script>
+</body>
+</html>

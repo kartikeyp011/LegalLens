@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Assistant — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},animation:{'fade-up':'fadeUp 0.5s ease-out forwards','pulse-slow':'pulse 3s ease-in-out infinite','spin-slow':'spin 1.5s linear infinite','bounce-dots':'bounceDots 1.2s ease-in-out infinite'},keyframes:{fadeUp:{'0%':{opacity:'0',transform:'translateY(12px)'},'100%':{opacity:'1',transform:'translateY(0)'}},bounceDots:{'0%,80%,100%':{transform:'scale(0)'},'40%':{transform:'scale(1)'}}}}}}</script>
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e8f0}
+    .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-dark{background:rgba(10,10,20,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06)}
+    .gradient-text{background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);transition:all 0.3s}
+    .btn-primary:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,0.35)}
+    .sidebar-link{transition:all 0.2s;border-radius:0.75rem}
+    .sidebar-link:hover{background:rgba(255,255,255,0.06);color:#fff}
+    .sidebar-link.active{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .msg-user{background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(168,85,247,0.15));border:1px solid rgba(99,102,241,0.25)}
+    .msg-ai{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07)}
+    .dot{width:7px;height:7px;border-radius:50%;background:#818cf8;display:inline-block;margin:0 2px}
+    .dot:nth-child(1){animation:bounceDots 1.2s ease-in-out infinite 0s}
+    .dot:nth-child(2){animation:bounceDots 1.2s ease-in-out infinite 0.2s}
+    .dot:nth-child(3){animation:bounceDots 1.2s ease-in-out infinite 0.4s}
+    @keyframes bounceDots{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+    .chat-input:focus{outline:none;border-color:rgba(99,102,241,0.5);box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
+    .suggestion-chip{transition:all 0.2s;cursor:pointer}
+    .suggestion-chip:hover{background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.4);color:#fff}
+    .msg-text h4{color:#e2e8f0;font-weight:700;margin:12px 0 4px}
+    .msg-text ul{list-style:disc;padding-left:18px;space-y:4px;color:#94a3b8}
+    .msg-text li{margin:4px 0}
+    .msg-text strong{color:#c4b5fd}
+    .msg-text p{margin:6px 0;color:#94a3b8;line-height:1.7}
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+    .history-item{transition:all 0.2s;cursor:pointer;border-radius:0.75rem}
+    .history-item:hover{background:rgba(255,255,255,0.06)}
+    .history-item.active-chat{background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.2)}
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><i class="fas fa-scale-balanced text-white text-xs"></i></div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm" id="sidebarAvatar">U</div>
+      <div><p class="text-white font-semibold text-sm" id="sidebarName">User</p><p class="text-slate-500 text-xs" id="sidebarRole">Citizen</p></div>
+    </div>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <a id="navHome" href="dashboard.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gauge-high w-4 text-center"></i> Dashboard</a>
+    <a href="cases.html"     class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-folder-open w-4 text-center"></i> Cases</a>
+    <a href="hearings.html"  class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gavel w-4 text-center"></i> Hearings</a>
+    <a href="documents.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-magnifying-glass w-4 text-center"></i> Documents</a>
+    <a href="drafts.html"    class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-pen w-4 text-center"></i> Drafts</a>
+    <a href="assistant.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium"><i class="fas fa-robot w-4 text-center text-indigo-400"></i> AI Assistant</a>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-book-open w-4 text-center"></i> Legal Awareness</a>
+    <a href="planning.html"  class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-diagram-project w-4 text-center"></i> Planning</a>
+  </nav>
+  <div class="px-3 py-3 border-t border-white/5 space-y-1">
+    <!-- Chat History -->
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pb-1">Recent Chats</p>
+    <div id="chatHistory" class="space-y-0.5 max-h-40 overflow-y-auto"></div>
+    <button onclick="newChat()" class="mt-2 w-full glass rounded-xl py-2 text-xs text-slate-400 hover:text-white flex items-center justify-center gap-2 transition-all hover:bg-white/6">
+      <i class="fas fa-plus text-xs"></i> New Chat
+    </button>
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400 mt-1"><i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out</button>
+  </div>
+</aside>
+<div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- MAIN CHAT AREA -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+  <!-- Top Bar -->
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white"><i class="fas fa-bars text-lg"></i></button>
+    <div class="flex items-center gap-3 flex-1">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-robot text-white text-sm"></i>
+      </div>
+      <div>
+        <p class="text-white font-bold text-sm">LegalLens AI</p>
+        <div class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse-slow"></span>
+          <span class="text-green-400 text-xs">Online · Indian Law Expert</span>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="clearChat()" class="glass px-3 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white transition-all"><i class="fas fa-trash-can mr-1.5 text-xs"></i>Clear</button>
+      <button onclick="newChat()"   class="glass px-3 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white transition-all"><i class="fas fa-plus mr-1.5 text-xs"></i>New</button>
+    </div>
+  </header>
+
+  <!-- Messages Area -->
+  <div class="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-5" id="chatMessages">
+
+    <!-- Welcome state -->
+    <div id="welcomeScreen" class="flex flex-col items-center justify-center min-h-full py-10 text-center">
+      <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/30">
+        <i class="fas fa-robot text-white text-3xl"></i>
+      </div>
+      <h2 class="text-white font-black text-2xl">LegalLens AI</h2>
+      <p class="text-slate-400 text-sm mt-2 max-w-md">Your personal legal assistant. Ask anything about Indian law — IPC, CPC, consumer rights, tenancy, labour law and more.</p>
+
+      <div class="mt-8 grid sm:grid-cols-2 gap-3 w-full max-w-xl">
+        <button onclick="sendSuggestion(this)" data-q="What are my rights as a tenant in India if the landlord refuses to refund the security deposit?"
+          class="suggestion-chip glass rounded-2xl p-4 text-left border border-white/8 hover:bg-indigo-500/10">
+          <i class="fas fa-house text-amber-400 block mb-2 text-lg"></i>
+          <p class="text-white text-sm font-semibold">Tenant rights</p>
+          <p class="text-slate-500 text-xs mt-0.5">Security deposit refusal</p>
+        </button>
+        <button onclick="sendSuggestion(this)" data-q="How to file a consumer complaint in India? What is the process and time limit?"
+          class="suggestion-chip glass rounded-2xl p-4 text-left border border-white/8 hover:bg-indigo-500/10">
+          <i class="fas fa-shopping-bag text-green-400 block mb-2 text-lg"></i>
+          <p class="text-white text-sm font-semibold">Consumer complaint</p>
+          <p class="text-slate-500 text-xs mt-0.5">Filing process & timeline</p>
+        </button>
+        <button onclick="sendSuggestion(this)" data-q="What are the grounds for divorce in India under Hindu Marriage Act? Explain mutual consent divorce process."
+          class="suggestion-chip glass rounded-2xl p-4 text-left border border-white/8 hover:bg-indigo-500/10">
+          <i class="fas fa-heart-crack text-pink-400 block mb-2 text-lg"></i>
+          <p class="text-white text-sm font-semibold">Divorce law</p>
+          <p class="text-slate-500 text-xs mt-0.5">Hindu Marriage Act</p>
+        </button>
+        <button onclick="sendSuggestion(this)" data-q="What is the process to file an RTI application in India? What information can be sought and what are the time limits?"
+          class="suggestion-chip glass rounded-2xl p-4 text-left border border-white/8 hover:bg-indigo-500/10">
+          <i class="fas fa-file-circle-question text-blue-400 block mb-2 text-lg"></i>
+          <p class="text-white text-sm font-semibold">RTI Application</p>
+          <p class="text-slate-500 text-xs mt-0.5">Process & time limits</p>
+        </button>
+        <button onclick="sendSuggestion(this)" data-q="My employer has not paid salary for 2 months. What legal action can I take under Indian labour law?"
+          class="suggestion-chip glass rounded-2xl p-4 text-left border border-white/8 hover:bg-indigo-500/10">
+          <i class="fas fa-briefcase text-blue-400 block mb-2 text-lg"></i>
+          <p class="text-white text-sm font-semibold">Unpaid salary</p>
+          <p class="text-slate-500 text-xs mt-0.5">Labour law remedies</p>
+        </button>
+        <button onclick="sendSuggestion(this)" data-q="What is anticipatory bail in India? When can it be applied for and what is the procedure under CrPC?"
+          class="suggestion-chip glass rounded-2xl p-4 text-left border border-white/8 hover:bg-indigo-500/10">
+          <i class="fas fa-gavel text-red-400 block mb-2 text-lg"></i>
+          <p class="text-white text-sm font-semibold">Anticipatory bail</p>
+          <p class="text-slate-500 text-xs mt-0.5">CrPC provisions</p>
+        </button>
+      </div>
+
+      <p class="text-slate-600 text-xs mt-8 max-w-sm">⚠️ AI responses are for informational purposes only and do not constitute legal advice. Consult a qualified advocate for your specific situation.</p>
+    </div>
+
+  </div>
+
+  <!-- Input Bar -->
+  <div class="flex-shrink-0 glass-dark border-t border-white/5 px-4 sm:px-8 py-4">
+    <!-- Quick chips (show after first message) -->
+    <div id="quickChips" class="hidden flex-wrap gap-2 mb-3">
+      <button onclick="sendSuggestion(this)" data-q="What documents do I need for this?" class="suggestion-chip glass rounded-full px-3 py-1.5 text-xs text-slate-400 border border-white/8">Documents needed?</button>
+      <button onclick="sendSuggestion(this)" data-q="What is the time limit for filing this case?" class="suggestion-chip glass rounded-full px-3 py-1.5 text-xs text-slate-400 border border-white/8">Time limit?</button>
+      <button onclick="sendSuggestion(this)" data-q="How much does this typically cost in legal fees?" class="suggestion-chip glass rounded-full px-3 py-1.5 text-xs text-slate-400 border border-white/8">Legal fees?</button>
+      <button onclick="sendSuggestion(this)" data-q="Which court has jurisdiction for this matter?" class="suggestion-chip glass rounded-full px-3 py-1.5 text-xs text-slate-400 border border-white/8">Which court?</button>
+    </div>
+    <div class="flex items-end gap-3">
+      <div class="flex-1 glass rounded-2xl px-4 py-3 flex items-end gap-3" style="border-color:rgba(99,102,241,0.2)">
+        <textarea id="chatInput" rows="1" placeholder="Ask any legal question about Indian law..."
+          class="flex-1 bg-transparent text-sm text-white placeholder-slate-600 resize-none focus:outline-none max-h-32 chat-input"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button onclick="sendMessage()" id="sendBtn"
+          class="btn-primary w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white transition-all">
+          <i class="fas fa-paper-plane text-xs"></i>
+        </button>
+      </div>
+    </div>
+    <p class="text-slate-700 text-xs text-center mt-2">LegalLens AI · Indian law only · Not a substitute for legal counsel</p>
+  </div>
+</div>
+
+<script>
+const session = JSON.parse(localStorage.getItem('ll_session') || sessionStorage.getItem('ll_session') || 'null');
+if (!session || !session.token) { window.location.href = 'login.html'; }
+const roleHome = { admin:'admin-dashboard.html', judge:'judge-dashboard.html', lawyer:'lawyer-dashboard.html', user:'dashboard.html' };
+document.getElementById('navHome').href = roleHome[session?.role] || 'dashboard.html';
+document.getElementById('sidebarName').textContent = session?.name || 'User';
+document.getElementById('sidebarAvatar').textContent = session?.name?.charAt(0).toUpperCase() || 'U';
+document.getElementById('sidebarRole').textContent = (session?.role||'user').charAt(0).toUpperCase()+(session?.role||'user').slice(1);
+
+let messageCount = 0;
+let allChats = JSON.parse(localStorage.getItem('ll_chats') || '[]');
+let activeChatId = null;
+
+// ── AI Response Bank (Indian Law)
+const AI_RESPONSES = {
+  tenant: {
+    keywords:['tenant','landlord','rent','deposit','security','eviction','lease'],
+    response:`<h4>🏠 Tenant Rights in India</h4>
+<p>Under the <strong>Transfer of Property Act, 1882</strong> and respective state Rent Control Acts, tenants have strong protections:</p>
+<ul>
+<li><strong>Security Deposit:</strong> Must be refunded within 30 days of vacating (as per most state rules). Landlord can only deduct for actual damage, not normal wear and tear.</li>
+<li><strong>Eviction:</strong> Cannot be done without proper notice (15–30 days) and valid legal grounds.</li>
+<li><strong>Rent Hike:</strong> Can only be increased as per the agreement or applicable Rent Control Act.</li>
+<li><strong>Receipt:</strong> Landlord must provide rent receipts on request.</li>
+</ul>
+<h4>⚖️ If Deposit is Refused</h4>
+<ul>
+<li>Send a formal <strong>Legal Notice</strong> under CPC demanding refund within 15 days.</li>
+<li>File a complaint before the <strong>Rent Controller</strong> of your city.</li>
+<li>If amount ≤ ₹1 crore, file in <strong>Consumer Forum</strong> under CPA 2019.</li>
+</ul>`
+  },
+  consumer: {
+    keywords:['consumer','complaint','product','defective','refund','company','service','forum'],
+    response:`<h4>🛒 Consumer Complaint Process — India</h4>
+<p>Governed by the <strong>Consumer Protection Act, 2019</strong>:</p>
+<ul>
+<li><strong>District Commission:</strong> Claims up to ₹50 lakhs</li>
+<li><strong>State Commission:</strong> Claims ₹50 lakhs – ₹2 crores</li>
+<li><strong>National Commission:</strong> Claims above ₹2 crores</li>
+</ul>
+<h4>📋 Steps to File</h4>
+<ul>
+<li>Send a legal notice to the company first (30-day window)</li>
+<li>File complaint on <strong>consumerhelpline.gov.in</strong> or e-DAAKHIL portal</li>
+<li>Attach: purchase proof, communication records, defect evidence</li>
+<li>Pay nominal court fee (₹100–₹250 for district level)</li>
+</ul>
+<h4>⏰ Time Limit</h4>
+<p>Complaint must be filed within <strong>2 years</strong> from the date of cause of action.</p>`
+  },
+  divorce: {
+    keywords:['divorce','marriage','separation','alimony','maintenance','wife','husband','matrimonial'],
+    response:`<h4>💔 Divorce Law in India</h4>
+<p>Governed by personal laws. Under the <strong>Hindu Marriage Act, 1955</strong>:</p>
+<ul>
+<li><strong>Mutual Consent Divorce (Sec 13B):</strong> Both parties agree; 6-month cooling period (can be waived by courts); requires 1-year separation.</li>
+<li><strong>Contested Divorce (Sec 13):</strong> Grounds include cruelty, adultery, desertion (2 years), conversion, unsound mind.</li>
+</ul>
+<h4>📋 Mutual Consent Process</h4>
+<ul>
+<li>File joint petition in Family Court</li>
+<li>First motion hearing</li>
+<li>6-month period (or waiver application)</li>
+<li>Second motion — decree granted</li>
+</ul>
+<h4>💰 Alimony</h4>
+<p>Either spouse can claim maintenance under <strong>Section 25</strong> of HMA. Amount depends on income, lifestyle, and conduct of parties.</p>`
+  },
+  rti: {
+    keywords:['rti','right to information','government','public','information'],
+    response:`<h4>📄 RTI Application — India</h4>
+<p>Under the <strong>Right to Information Act, 2005</strong>, every citizen can request information from any public authority.</p>
+<h4>📋 How to File</h4>
+<ul>
+<li>Write application to the <strong>Public Information Officer (PIO)</strong> of the concerned department</li>
+<li>Pay ₹10 application fee (IPO / DD / online)</li>
+<li>No fee for BPL applicants</li>
+<li>File online at <strong>rtionline.gov.in</strong> for central govt bodies</li>
+</ul>
+<h4>⏰ Time Limits</h4>
+<ul>
+<li>Response within <strong>30 days</strong> (45 days if 3rd party involved)</li>
+<li>Life/liberty matters: <strong>48 hours</strong></li>
+<li>First appeal within <strong>30 days</strong> if unsatisfied</li>
+<li>Second appeal to <strong>Central/State Information Commission</strong></li>
+</ul>`
+  },
+  labour: {
+    keywords:['salary','wage','employer','employment','termination','labour','fired','notice period','pf','gratuity'],
+    response:`<h4>💼 Labour Law Remedies — Unpaid Salary</h4>
+<p>Under the <strong>Payment of Wages Act, 1936</strong> and <strong>Industrial Disputes Act, 1947</strong>:</p>
+<ul>
+<li>Wages must be paid by 7th/10th of the following month</li>
+<li>Withholding salary without valid reason is a <strong>criminal offence</strong></li>
+</ul>
+<h4>⚖️ Steps to Take</h4>
+<ul>
+<li>Send written demand notice to employer</li>
+<li>File complaint before the <strong>Labour Commissioner</strong> of your state</li>
+<li>File application under <strong>Sec 33C(2) IDA</strong> before Labour Court for recovery</li>
+<li>For IT/service sector: approach <strong>Labour Inspector</strong> under Shops & Establishments Act</li>
+</ul>
+<h4>💡 Additional Remedies</h4>
+<ul>
+<li>File complaint on <strong>Shram Suvidha Portal</strong> (shramsuvidha.gov.in)</li>
+<li>EPFO can be notified for PF violations</li>
+</ul>`
+  },
+  bail: {
+    keywords:['bail','arrest','custody','fir','accused','anticipatory','crpc','bns'],
+    response:`<h4>⚖️ Anticipatory Bail — India</h4>
+<p>Under <strong>Section 438 CrPC</strong> (now Section 482 BNSS, 2023), anticipatory bail is granted in <em>apprehension</em> of arrest.</p>
+<h4>📋 When Applicable</h4>
+<ul>
+<li>Reasonable belief that arrest is imminent in a non-bailable offence</li>
+<li>Applied before actual arrest</li>
+<li>Not available in cases under special laws (NDPS, PMLA etc.) without restrictions</li>
+</ul>
+<h4>🏛️ Procedure</h4>
+<ul>
+<li>File application in <strong>Sessions Court or High Court</strong></li>
+<li>Court considers: nature of accusation, antecedents, possibility of fleeing, likelihood of tampering</li>
+<li>Court may impose conditions: surrender passport, report to police, not leave country</li>
+</ul>
+<h4>📌 Key Points</h4>
+<ul>
+<li>No fixed time limit — courts have discretion</li>
+<li>Can be challenged by state in higher courts</li>
+</ul>`
+  },
+  default: {
+    keywords:[],
+    response:`<h4>⚖️ Legal Query — Indian Law</h4>
+<p>Thank you for your question. Here's a general overview based on Indian law:</p>
+<ul>
+<li>Indian legal system is governed by a combination of <strong>Acts of Parliament</strong>, <strong>State laws</strong>, and <strong>judicial precedents</strong>.</li>
+<li>Most civil matters are governed by the <strong>CPC (Civil Procedure Code, 1908)</strong>.</li>
+<li>Criminal matters fall under the <strong>BNSS (Bharatiya Nagarik Suraksha Sanhita, 2023)</strong>, which replaced CrPC.</li>
+<li>Substantive criminal law is now the <strong>BNS (Bharatiya Nyaya Sanhita, 2023)</strong>, replacing IPC.</li>
+</ul>
+<p>For your specific situation, I recommend consulting a licensed advocate. You can also use the <strong>Drafts</strong> or <strong>Planning Tools</strong> sections of LegalLens for further help.</p>`
+  }
+};
+
+function getAIResponse(userMsg) {
+  const msg = userMsg.toLowerCase();
+  for (const [key, val] of Object.entries(AI_RESPONSES)) {
+    if (key === 'default') continue;
+    if (val.keywords.some(k => msg.includes(k))) return val.response;
+  }
+  return AI_RESPONSES.default.response;
+}
+
+function appendUserMsg(text) {
+  document.getElementById('welcomeScreen')?.remove();
+  document.getElementById('quickChips').classList.remove('hidden');
+  document.getElementById('quickChips').classList.add('flex');
+  const div = document.createElement('div');
+  div.className = 'flex items-end gap-3 justify-end animate-fade-up';
+  div.innerHTML = `
+    <div class="max-w-[75%] msg-user rounded-2xl rounded-br-sm px-4 py-3">
+      <p class="text-white text-sm leading-relaxed">${escHtml(text)}</p>
+    </div>
+    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0 text-white font-bold text-xs">${session?.name?.charAt(0).toUpperCase()||'U'}</div>`;
+  document.getElementById('chatMessages').appendChild(div);
+  scrollBottom();
+}
+
+function appendTypingIndicator() {
+  const div = document.createElement('div');
+  div.id = 'typingIndicator';
+  div.className = 'flex items-end gap-3 animate-fade-up';
+  div.innerHTML = `
+    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-robot text-white text-xs"></i></div>
+    <div class="msg-ai rounded-2xl rounded-bl-sm px-4 py-3">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>`;
+  document.getElementById('chatMessages').appendChild(div);
+  scrollBottom();
+}
+
+function appendAIMsg(html) {
+  document.getElementById('typingIndicator')?.remove();
+  const div = document.createElement('div');
+  div.className = 'flex items-start gap-3 animate-fade-up';
+  div.innerHTML = `
+    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 mt-1"><i class="fas fa-robot text-white text-xs"></i></div>
+    <div class="flex-1 max-w-[80%]">
+      <div class="msg-ai rounded-2xl rounded-tl-sm px-5 py-4">
+        <div class="msg-text text-sm">${html}</div>
+      </div>
+      <div class="flex items-center gap-3 mt-2 px-1">
+        <button onclick="copyMsg(this)" class="text-slate-600 hover:text-slate-400 text-xs transition-colors"><i class="fas fa-copy mr-1"></i>Copy</button>
+        <a href="drafts.html" class="text-slate-600 hover:text-indigo-400 text-xs transition-colors"><i class="fas fa-file-pen mr-1"></i>Generate Draft</a>
+        <span class="text-slate-700 text-xs ml-auto">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span>
+      </div>
+    </div>`;
+  document.getElementById('chatMessages').appendChild(div);
+  scrollBottom();
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text  = input.value.trim();
+  if (!text) return;
+  input.value = ''; autoResize(input);
+  messageCount++;
+  appendUserMsg(text);
+  appendTypingIndicator();
+  const delay = 1200 + Math.random() * 800;
+  setTimeout(() => { appendAIMsg(getAIResponse(text)); saveChatToHistory(text); }, delay);
+}
+
+function sendSuggestion(btn) {
+  document.getElementById('chatInput').value = btn.dataset.q;
+  sendMessage();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 128) + 'px';
+}
+
+function scrollBottom() {
+  const el = document.getElementById('chatMessages');
+  setTimeout(() => { el.scrollTop = el.scrollHeight; }, 50);
+}
+
+function clearChat() {
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = '';
+  messageCount = 0;
+  document.getElementById('quickChips').classList.add('hidden');
+  // Re-add welcome screen
+  const ws = document.createElement('div');
+  ws.id = 'welcomeScreen';
+  ws.className = 'flex flex-col items-center justify-center min-h-full py-10 text-center';
+  ws.innerHTML = `<div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center mb-4"><i class="fas fa-robot text-slate-500 text-2xl"></i></div><p class="text-slate-400 font-semibold">Chat cleared</p><p class="text-slate-600 text-sm mt-1">Start a new conversation below</p>`;
+  msgs.appendChild(ws);
+}
+
+function newChat() { clearChat(); activeChatId = null; }
+
+function saveChatToHistory(firstMsg) {
+  if (messageCount !== 1) return;
+  const chat = { id: Date.now(), preview: firstMsg.slice(0,40) + (firstMsg.length > 40 ? '...' : ''), time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) };
+  allChats.unshift(chat); if (allChats.length > 6) allChats.pop();
+  localStorage.setItem('ll_chats', JSON.stringify(allChats));
+  renderChatHistory();
+}
+
+function renderChatHistory() {
+  document.getElementById('chatHistory').innerHTML = allChats.slice(0,5).map(c => `
+    <div class="history-item flex items-center gap-2 px-3 py-2 ${c.id === activeChatId ? 'active-chat' : ''}">
+      <i class="fas fa-message text-slate-600 text-xs flex-shrink-0"></i>
+      <div class="flex-1 min-w-0">
+        <p class="text-slate-400 text-xs truncate">${escHtml(c.preview)}</p>
+      </div>
+      <span class="text-slate-700 text-xs flex-shrink-0">${c.time}</span>
+    </div>
+  `).join('') || '<p class="text-slate-700 text-xs px-3 py-2">No chats yet</p>';
+}
+
+function copyMsg(btn) {
+  const text = btn.closest('.flex').querySelector('.msg-text').innerText;
+  navigator.clipboard.writeText(text).then(() => { btn.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!'; setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy mr-1"></i>Copy'; }, 2000); });
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+  const open = !s.classList.contains('-translate-x-full');
+  s.classList.toggle('-translate-x-full', open); o.classList.toggle('hidden', open);
+}
+function handleLogout() { localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session'); window.location.href = 'login.html'; }
+
+renderChatHistory();
+</script>
+</body>
+</html>

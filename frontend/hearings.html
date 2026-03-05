@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hearings — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},animation:{'fade-up':'fadeUp 0.5s ease-out forwards','pulse-slow':'pulse 3s ease-in-out infinite'},keyframes:{fadeUp:{'0%':{opacity:'0',transform:'translateY(16px)'},'100%':{opacity:'1',transform:'translateY(0)'}}}}}}</script>
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e8f0}
+    .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-dark{background:rgba(10,10,20,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06)}
+    .gradient-text{background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);transition:all 0.3s}
+    .btn-primary:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,0.35)}
+    .sidebar-link{transition:all 0.2s;border-radius:0.75rem}
+    .sidebar-link:hover{background:rgba(255,255,255,0.06);color:#fff}
+    .sidebar-link.active{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;font-size:0.7rem;font-weight:600}
+    .badge-upcoming{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .badge-today{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.25)}
+    .badge-done{background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.15)}
+    .badge-adjourned{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)}
+    .hearing-card{transition:all 0.25s}
+    .hearing-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(99,102,241,0.15)}
+    .cal-day{transition:all 0.2s;border-radius:0.75rem;cursor:pointer;min-height:52px}
+    .cal-day:hover{background:rgba(255,255,255,0.06)}
+    .cal-day.has-hearing{border:1px solid rgba(99,102,241,0.35);background:rgba(99,102,241,0.1)}
+    .cal-day.today{border:1px solid rgba(99,102,241,0.6);background:rgba(99,102,241,0.2)}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><i class="fas fa-scale-balanced text-white text-xs"></i></div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm" id="sidebarAvatar">U</div>
+      <div><p class="text-white font-semibold text-sm" id="sidebarName">User</p><p class="text-slate-500 text-xs" id="sidebarRole">Citizen</p></div>
+    </div>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <a id="navHome" href="dashboard.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gauge-high w-4 text-center"></i> Dashboard</a>
+    <a href="cases.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-folder-open w-4 text-center"></i> Cases</a>
+    <a href="hearings.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium"><i class="fas fa-gavel w-4 text-center text-indigo-400"></i> Hearings</a>
+    <a href="documents.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-magnifying-glass w-4 text-center"></i> Documents</a>
+    <a href="drafts.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-pen w-4 text-center"></i> Drafts</a>
+    <a href="assistant.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-robot w-4 text-center"></i> AI Assistant</a>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-book-open w-4 text-center"></i> Legal Awareness</a>
+    <a href="planning.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-diagram-project w-4 text-center"></i> Planning</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-white/5">
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400"><i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out</button>
+  </div>
+</aside>
+<div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white"><i class="fas fa-bars text-lg"></i></button>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i><i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium">Hearings</span>
+    </div>
+    <div class="ml-auto flex items-center gap-3">
+      <div class="flex gap-1 glass rounded-xl p-1">
+        <button onclick="setView('list')" id="viewList" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/8 text-white transition-all"><i class="fas fa-list mr-1.5"></i>List</button>
+        <button onclick="setView('calendar')" id="viewCal" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-white transition-all"><i class="fas fa-calendar mr-1.5"></i>Calendar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+
+    <!-- Upcoming highlight -->
+    <div id="nextHearingBanner" class="glass rounded-2xl px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4" style="background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(168,85,247,0.06));border-color:rgba(99,102,241,0.2)">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex flex-col items-center justify-center flex-shrink-0">
+          <p class="text-indigo-300 font-black text-xl leading-none" id="nextDay">6</p>
+          <p class="text-indigo-400 text-xs">Mar</p>
+        </div>
+        <div>
+          <p class="text-xs text-indigo-300 font-semibold uppercase tracking-wider mb-1">Next Hearing</p>
+          <p class="text-white font-bold text-base" id="nextTitle">Rent Deposit Dispute</p>
+          <p class="text-slate-400 text-sm mt-0.5" id="nextMeta">10:30 AM · Tis Hazari, Room 4</p>
+        </div>
+      </div>
+      <div class="flex gap-3 flex-shrink-0">
+        <button onclick="addToCalendar()" class="glass flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-medium hover:bg-white/8 transition-all">
+          <i class="fas fa-calendar-plus text-indigo-400 text-xs"></i> Add to Calendar
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center"><i class="fas fa-calendar-days text-indigo-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white">5</p><p class="text-slate-500 text-xs">Total</p></div>
+      </div>
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-green-500/20 flex items-center justify-center"><i class="fas fa-clock text-green-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white">3</p><p class="text-slate-500 text-xs">Upcoming</p></div>
+      </div>
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-slate-500/20 flex items-center justify-center"><i class="fas fa-check-circle text-slate-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white">1</p><p class="text-slate-500 text-xs">Completed</p></div>
+      </div>
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center"><i class="fas fa-rotate-right text-amber-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white">1</p><p class="text-slate-500 text-xs">Adjourned</p></div>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <div id="listView" class="space-y-4">
+      <h2 class="text-white font-bold text-base">All Hearings</h2>
+      <div class="space-y-4" id="hearingList"></div>
+    </div>
+
+    <!-- Calendar View -->
+    <div id="calendarView" class="hidden space-y-4">
+      <div class="glass rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-6">
+          <button onclick="changeMonth(-1)" class="w-9 h-9 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors"><i class="fas fa-chevron-left text-xs"></i></button>
+          <h2 class="text-white font-bold text-base" id="calTitle">March 2026</h2>
+          <button onclick="changeMonth(1)"  class="w-9 h-9 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors"><i class="fas fa-chevron-right text-xs"></i></button>
+        </div>
+        <div class="grid grid-cols-7 gap-1 mb-3">
+          <div class="text-center text-slate-600 text-xs font-semibold py-2">S</div>
+          <div class="text-center text-slate-600 text-xs font-semibold py-2">M</div>
+          <div class="text-center text-slate-600 text-xs font-semibold py-2">T</div>
+          <div class="text-center text-slate-600 text-xs font-semibold py-2">W</div>
+          <div class="text-center text-slate-600 text-xs font-semibold py-2">T</div>
+          <div class="text-center text-slate-600 text-xs font-semibold py-2">F</div>
+          <div class="text-center text-slate-600 text-xs font-semibold py-2">S</div>
+        </div>
+        <div class="grid grid-cols-7 gap-1" id="calGrid"></div>
+      </div>
+      <div id="calDayDetail" class="glass rounded-2xl p-5 hidden">
+        <h3 class="text-white font-bold text-sm mb-3" id="calDayTitle">Hearings on this day</h3>
+        <div id="calDayList" class="space-y-3"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const session = JSON.parse(localStorage.getItem('ll_session') || sessionStorage.getItem('ll_session') || 'null');
+if (!session || !session.token) { window.location.href = 'login.html'; }
+const roleHome = { admin:'admin-dashboard.html', judge:'judge-dashboard.html', lawyer:'lawyer-dashboard.html', user:'dashboard.html' };
+document.getElementById('navHome').href = roleHome[session?.role] || 'dashboard.html';
+document.getElementById('sidebarName').textContent = session?.name || 'User';
+document.getElementById('sidebarAvatar').textContent = session?.name?.charAt(0).toUpperCase() || 'U';
+document.getElementById('sidebarRole').textContent = (session?.role||'user').charAt(0).toUpperCase()+(session?.role||'user').slice(1);
+
+const HEARINGS = [
+  { id:'H001', caseId:'LL-2025-089', caseTitle:'Rent Deposit Dispute',        date:'2026-03-06', day:6,  time:'10:30 AM', court:'Tis Hazari, Room 4',    type:'Evidence',   status:'upcoming',  lawyer:'Adv. Priya Singh'  },
+  { id:'H002', caseId:'LL-2026-014', caseTitle:'Flat Ownership Dispute',       date:'2026-03-08', day:8,  time:'2:00 PM',  court:'Delhi HC, Court 7',     type:'Arguments',  status:'upcoming',  lawyer:'Adv. Priya Singh'  },
+  { id:'H003', caseId:'LL-2025-102', caseTitle:'Consumer Complaint — Samsung', date:'2026-03-12', day:12, time:'11:00 AM', court:'District Court, Dwarka', type:'Initial',    status:'upcoming',  lawyer:'Adv. R. Kapoor'    },
+  { id:'H004', caseId:'LL-2025-089', caseTitle:'Rent Deposit Dispute',         date:'2026-02-20', day:20, time:'10:30 AM', court:'Tis Hazari, Room 4',    type:'Evidence',   status:'adjourned', lawyer:'Adv. Priya Singh'  },
+  { id:'H005', caseId:'LL-2025-102', caseTitle:'Consumer Complaint — Samsung', date:'2026-01-28', day:28, time:'3:00 PM',  court:'District Court, Dwarka', type:'Initial',   status:'done',      lawyer:'Adv. R. Kapoor'    },
+];
+
+let currentView = 'list';
+let currentMonth = 2, currentYear = 2026; // 0-indexed month = March
+
+const HEARING_DAYS = new Set(HEARINGS.filter(h => h.status==='upcoming').map(h => h.day));
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('listView').classList.toggle('hidden', v!=='list');
+  document.getElementById('calendarView').classList.toggle('hidden', v!=='calendar');
+  document.getElementById('viewList').className = `px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${v==='list'?'bg-white/8 text-white':'text-slate-500 hover:text-white'}`;
+  document.getElementById('viewCal').className  = `px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${v==='calendar'?'bg-white/8 text-white':'text-slate-500 hover:text-white'}`;
+  if (v === 'calendar') renderCalendar();
+}
+
+function renderHearings() {
+  const statusCfg = { upcoming:{badge:'badge-upcoming',icon:'fa-clock'}, today:{badge:'badge-today',icon:'fa-circle animate-pulse-slow'}, done:{badge:'badge-done',icon:'fa-check-circle'}, adjourned:{badge:'badge-adjourned',icon:'fa-rotate-right'} };
+  const typeColors = { Evidence:'text-blue-400 bg-blue-500/15', Arguments:'text-purple-400 bg-purple-500/15', Initial:'text-green-400 bg-green-500/15', Judgment:'text-red-400 bg-red-500/15', Mediation:'text-amber-400 bg-amber-500/15' };
+  document.getElementById('hearingList').innerHTML = HEARINGS.map(h => {
+    const sc = statusCfg[h.status] || statusCfg.upcoming;
+    const tc = typeColors[h.type] || 'text-slate-400 bg-slate-500/15';
+    const d  = new Date(h.date);
+    return `
+    <div class="hearing-card glass rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+      <div class="flex-shrink-0 w-16 text-center glass rounded-2xl py-3">
+        <p class="text-indigo-300 font-black text-2xl leading-none">${d.getDate()}</p>
+        <p class="text-slate-500 text-xs mt-0.5">${d.toLocaleDateString('en-IN',{month:'short'})}</p>
+        <p class="text-slate-600 text-xs">${d.getFullYear()}</p>
+      </div>
+      <div class="flex-1 min-w-0 space-y-2">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-white font-bold text-base">${h.caseTitle}</p>
+            <p class="text-slate-500 text-xs">#${h.caseId}</p>
+          </div>
+          <span class="badge ${sc.badge} flex-shrink-0"><i class="fas ${sc.icon} text-xs"></i>${h.status.charAt(0).toUpperCase()+h.status.slice(1)}</span>
+        </div>
+        <div class="flex flex-wrap gap-3 text-xs">
+          <span class="flex items-center gap-1.5 text-slate-400"><i class="fas fa-clock text-indigo-400 text-xs"></i>${h.time}</span>
+          <span class="flex items-center gap-1.5 text-slate-400"><i class="fas fa-location-dot text-rose-400 text-xs"></i>${h.court}</span>
+          <span class="flex items-center gap-1.5 text-slate-400"><i class="fas fa-user-tie text-purple-400 text-xs"></i>${h.lawyer}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs px-2.5 py-1 rounded-lg font-medium ${tc}">${h.type} Hearing</span>
+          ${h.status==='upcoming'?`<button onclick="addToCalendar()" class="text-indigo-400 text-xs hover:text-indigo-300 transition-colors"><i class="fas fa-calendar-plus mr-1 text-xs"></i>Add to Calendar</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Calendar
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function renderCalendar() {
+  const title = document.getElementById('calTitle');
+  title.textContent = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = 5; // March 5
+  const grid = document.getElementById('calGrid');
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const hasH = HEARING_DAYS.has(d);
+    const isToday = d === today && currentMonth === 2 && currentYear === 2026;
+    html += `<div class="cal-day p-2 text-center ${hasH?'has-hearing':''} ${isToday?'today':''}" onclick="showDayDetail(${d})">
+      <p class="text-sm font-semibold ${isToday?'text-indigo-300':hasH?'text-indigo-300':'text-slate-400'}">${d}</p>
+      ${hasH?`<div class="w-1.5 h-1.5 bg-indigo-400 rounded-full mx-auto mt-1"></div>`:''}
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function showDayDetail(day) {
+  const dayHearings = HEARINGS.filter(h => h.day === day && h.status === 'upcoming');
+  const detail = document.getElementById('calDayDetail');
+  const title  = document.getElementById('calDayTitle');
+  title.textContent = `Hearings on ${day} ${MONTH_NAMES[currentMonth]}`;
+  if (!dayHearings.length) { detail.classList.add('hidden'); return; }
+  detail.classList.remove('hidden');
+  document.getElementById('calDayList').innerHTML = dayHearings.map(h => `
+    <div class="glass rounded-xl p-3 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0"><i class="fas fa-gavel text-indigo-400 text-xs"></i></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-semibold truncate">${h.caseTitle}</p>
+        <p class="text-slate-500 text-xs">${h.time} · ${h.court}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeMonth(dir) { currentMonth += dir; if (currentMonth > 11) { currentMonth = 0; currentYear++; } if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); document.getElementById('calDayDetail').classList.add('hidden'); }
+
+function addToCalendar() { showToast('Reminder added! Check your calendar.', 'success'); }
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+  const open = !s.classList.contains('-translate-x-full');
+  s.classList.toggle('-translate-x-full', open); o.classList.toggle('hidden', open);
+}
+function handleLogout() { localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session'); window.location.href = 'login.html'; }
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
+  t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+renderHearings();
+</script>
+</body>
+</html>

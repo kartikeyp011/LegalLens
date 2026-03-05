@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cases — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},animation:{'fade-up':'fadeUp 0.5s ease-out forwards','pulse-slow':'pulse 3s ease-in-out infinite'},keyframes:{fadeUp:{'0%':{opacity:'0',transform:'translateY(16px)'},'100%':{opacity:'1',transform:'translateY(0)'}}}}}}</script>
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e8f0}
+    .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-dark{background:rgba(10,10,20,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06)}
+    .gradient-text{background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);transition:all 0.3s}
+    .btn-primary:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,0.35)}
+    .sidebar-link{transition:all 0.2s;border-radius:0.75rem}
+    .sidebar-link:hover{background:rgba(255,255,255,0.06);color:#fff}
+    .sidebar-link.active{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .case-card{transition:all 0.25s;cursor:pointer}
+    .case-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(99,102,241,0.15)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;font-size:0.7rem;font-weight:600}
+    .badge-active{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.25)}
+    .badge-pending{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)}
+    .badge-closed{background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.15)}
+    .badge-review{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.25)}
+    .badge-hearing{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+    .step-line{width:2px;height:100%;background:rgba(255,255,255,0.06);position:absolute;left:19px;top:28px}
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><i class="fas fa-scale-balanced text-white text-xs"></i></div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0" id="sidebarAvatar">U</div>
+      <div class="min-w-0">
+        <p class="text-white font-semibold text-sm truncate" id="sidebarName">User</p>
+        <p class="text-slate-500 text-xs" id="sidebarRole">Citizen</p>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <p class="text-slate-600 text-xs font-semibold uppercase tracking-wider px-3 pb-2">Navigation</p>
+    <a id="navHome" href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gauge-high w-4 text-center"></i> Dashboard</a>
+    <a href="cases.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium"><i class="fas fa-folder-open w-4 text-center text-indigo-400"></i> My Cases</a>
+    <a href="hearings.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gavel w-4 text-center"></i> Hearings</a>
+    <a href="documents.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-magnifying-glass w-4 text-center"></i> Documents</a>
+    <a href="drafts.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-pen w-4 text-center"></i> Draft Generator</a>
+    <a href="assistant.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-robot w-4 text-center"></i> AI Assistant</a>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-book-open w-4 text-center"></i> Legal Awareness</a>
+    <a href="planning.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-diagram-project w-4 text-center"></i> Planning Tools</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-white/5">
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400"><i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out</button>
+  </div>
+</aside>
+<div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white"><i class="fas fa-bars text-lg"></i></button>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i><i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium">Cases</span>
+    </div>
+    <div class="flex-1 max-w-md ml-auto sm:ml-4 relative">
+      <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none"></i>
+      <input type="text" id="caseSearch" placeholder="Search cases..." oninput="renderCases()"
+        class="w-full bg-white/4 border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+    </div>
+    <button onclick="openNewCaseModal()" class="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex-shrink-0">
+      <i class="fas fa-plus text-xs"></i><span class="hidden sm:inline">New Case</span>
+    </button>
+  </header>
+
+  <main class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/25 flex items-center justify-center flex-shrink-0"><i class="fas fa-folder text-indigo-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white" id="statTotal">0</p><p class="text-slate-500 text-xs">Total</p></div>
+      </div>
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-green-500/20 border border-green-500/25 flex items-center justify-center flex-shrink-0"><i class="fas fa-circle-play text-green-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white" id="statActive">0</p><p class="text-slate-500 text-xs">Active</p></div>
+      </div>
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/25 flex items-center justify-center flex-shrink-0"><i class="fas fa-gavel text-amber-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white" id="statHearing">0</p><p class="text-slate-500 text-xs">Hearing Set</p></div>
+      </div>
+      <div class="glass rounded-2xl p-4 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-slate-500/20 border border-slate-500/25 flex items-center justify-center flex-shrink-0"><i class="fas fa-check-circle text-slate-400 text-sm"></i></div>
+        <div><p class="text-2xl font-black text-white" id="statClosed">0</p><p class="text-slate-500 text-xs">Closed</p></div>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex flex-wrap gap-2">
+      <button onclick="setFilter('all')"     id="f-all"     class="filter-tab px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-500/20 text-indigo-300 transition-all">All</button>
+      <button onclick="setFilter('active')"  id="f-active"  class="filter-tab px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 glass transition-all">Active</button>
+      <button onclick="setFilter('review')"  id="f-review"  class="filter-tab px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 glass transition-all">In Review</button>
+      <button onclick="setFilter('hearing')" id="f-hearing" class="filter-tab px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 glass transition-all">Hearing Set</button>
+      <button onclick="setFilter('closed')"  id="f-closed"  class="filter-tab px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 glass transition-all">Closed</button>
+    </div>
+
+    <!-- Case Cards -->
+    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5" id="caseGrid"></div>
+    <div id="emptyState" class="hidden text-center py-20">
+      <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4"><i class="fas fa-folder-open text-slate-500 text-2xl"></i></div>
+      <p class="text-slate-400 font-semibold">No cases found</p>
+      <p class="text-slate-600 text-sm mt-1">Try a different filter or <button onclick="openNewCaseModal()" class="text-indigo-400 underline">file a new case</button></p>
+    </div>
+
+  </main>
+</div>
+
+<!-- CASE DETAIL DRAWER -->
+<div id="caseDrawer" class="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] glass-dark border-l border-white/8 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+  <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+    <div><h3 class="text-white font-bold text-base" id="drawerCaseId">Case Details</h3><p class="text-slate-500 text-xs mt-0.5" id="drawerCaseType"></p></div>
+    <button onclick="closeDrawer()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="flex-1 overflow-y-auto p-6 space-y-5" id="drawerBody"></div>
+  <div class="flex-shrink-0 px-6 py-4 border-t border-white/5 flex gap-3">
+    <a href="documents.html" class="flex-1 glass rounded-xl py-2.5 text-sm text-indigo-300 hover:bg-indigo-500/10 transition-all font-medium text-center"><i class="fas fa-file mr-2 text-xs"></i>Documents</a>
+    <a href="assistant.html" class="flex-1 btn-primary rounded-xl py-2.5 text-sm text-white font-semibold text-center"><i class="fas fa-robot mr-2 text-xs"></i>AI Help</a>
+  </div>
+</div>
+<div id="drawerOverlay" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm hidden" onclick="closeDrawer()"></div>
+
+<!-- NEW CASE MODAL -->
+<div id="newCaseModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeNewCaseModal()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-lg relative z-10 animate-fade-up max-h-[90vh] overflow-y-auto">
+    <div class="px-7 py-5 border-b border-white/5 flex items-center justify-between sticky top-0 glass-dark z-10">
+      <div><h3 class="text-white font-bold text-lg">File a New Case</h3><p class="text-slate-500 text-xs mt-0.5">Describe your legal issue clearly</p></div>
+      <button onclick="closeNewCaseModal()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-7 space-y-4">
+      <!-- Progress steps -->
+      <div class="flex items-center gap-2 mb-6">
+        <div class="step flex items-center gap-2" id="step1Ind">
+          <div class="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold">1</div>
+          <span class="text-indigo-300 text-xs font-medium">Issue</span>
+        </div>
+        <div class="flex-1 h-px bg-white/10"></div>
+        <div class="step flex items-center gap-2" id="step2Ind">
+          <div class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-slate-400 text-xs font-bold" id="step2Circle">2</div>
+          <span class="text-slate-500 text-xs" id="step2Label">Details</span>
+        </div>
+        <div class="flex-1 h-px bg-white/10"></div>
+        <div class="step flex items-center gap-2" id="step3Ind">
+          <div class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-slate-400 text-xs font-bold" id="step3Circle">3</div>
+          <span class="text-slate-500 text-xs" id="step3Label">Confirm</span>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="formStep1" class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Case Title <span class="text-red-400">*</span></label>
+          <input id="caseTitle" type="text" placeholder="Brief title of your legal issue"
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Case Type <span class="text-red-400">*</span></label>
+          <div class="grid grid-cols-3 gap-2" id="caseTypeGrid">
+            <button onclick="selectCaseType(this,'Property')"    class="type-btn glass rounded-xl py-3 px-2 text-xs text-slate-400 hover:text-white transition-all text-center"><i class="fas fa-house block text-lg mb-1 text-amber-400"></i>Property</button>
+            <button onclick="selectCaseType(this,'Family')"      class="type-btn glass rounded-xl py-3 px-2 text-xs text-slate-400 hover:text-white transition-all text-center"><i class="fas fa-heart block text-lg mb-1 text-pink-400"></i>Family</button>
+            <button onclick="selectCaseType(this,'Consumer')"    class="type-btn glass rounded-xl py-3 px-2 text-xs text-slate-400 hover:text-white transition-all text-center"><i class="fas fa-shopping-bag block text-lg mb-1 text-green-400"></i>Consumer</button>
+            <button onclick="selectCaseType(this,'Labour')"      class="type-btn glass rounded-xl py-3 px-2 text-xs text-slate-400 hover:text-white transition-all text-center"><i class="fas fa-briefcase block text-lg mb-1 text-blue-400"></i>Labour</button>
+            <button onclick="selectCaseType(this,'Criminal')"    class="type-btn glass rounded-xl py-3 px-2 text-xs text-slate-400 hover:text-white transition-all text-center"><i class="fas fa-gavel block text-lg mb-1 text-red-400"></i>Criminal</button>
+            <button onclick="selectCaseType(this,'Other')"       class="type-btn glass rounded-xl py-3 px-2 text-xs text-slate-400 hover:text-white transition-all text-center"><i class="fas fa-ellipsis block text-lg mb-1 text-purple-400"></i>Other</button>
+          </div>
+        </div>
+        <button onclick="goStep(2)" class="w-full btn-primary rounded-xl py-3 text-white font-semibold text-sm">Continue <i class="fas fa-arrow-right ml-2 text-xs"></i></button>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="formStep2" class="hidden space-y-4">
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Describe the Issue <span class="text-red-400">*</span></label>
+          <textarea id="caseDesc" rows="4" placeholder="Explain what happened, key dates, parties involved..."
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="text-slate-300 text-sm font-medium">Incident Date</label>
+            <input id="caseDate" type="date" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all" style="color-scheme:dark"/>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-slate-300 text-sm font-medium">Urgency</label>
+            <select id="caseUrgency" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+              <option class="bg-slate-900">Normal</option>
+              <option class="bg-slate-900">Urgent</option>
+              <option class="bg-slate-900">Critical</option>
+            </select>
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-slate-300 text-sm font-medium">Opposite Party Name <span class="text-slate-500 text-xs">(optional)</span></label>
+          <input id="caseOpposite" type="text" placeholder="Person or organization name"
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="goStep(1)" class="flex-1 glass rounded-xl py-3 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium"><i class="fas fa-arrow-left mr-2 text-xs"></i>Back</button>
+          <button onclick="goStep(3)" class="flex-1 btn-primary rounded-xl py-3 text-white font-semibold text-sm">Review <i class="fas fa-arrow-right ml-2 text-xs"></i></button>
+        </div>
+      </div>
+
+      <!-- Step 3 — Confirm -->
+      <div id="formStep3" class="hidden space-y-4">
+        <div class="glass rounded-2xl p-5 space-y-3" id="caseReviewBox"></div>
+        <div class="glass rounded-xl p-4 flex items-start gap-3 border border-indigo-500/20 bg-indigo-500/5">
+          <i class="fas fa-circle-info text-indigo-400 text-sm mt-0.5"></i>
+          <p class="text-slate-400 text-xs">Your case will be filed and a unique Case ID will be generated. A lawyer will be assigned by the admin within 24–48 hours.</p>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="goStep(2)" class="flex-1 glass rounded-xl py-3 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium"><i class="fas fa-arrow-left mr-2 text-xs"></i>Back</button>
+          <button onclick="submitNewCase()" class="flex-1 btn-primary rounded-xl py-3 text-white font-semibold text-sm flex items-center justify-center gap-2">
+            <i class="fas fa-paper-plane text-xs"></i> File Case
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const session = JSON.parse(localStorage.getItem('ll_session') || sessionStorage.getItem('ll_session') || 'null');
+if (!session || !session.token) { window.location.href = 'login.html'; }
+
+// Role-based home link
+const roleHome = { admin:'admin-dashboard.html', judge:'judge-dashboard.html', lawyer:'lawyer-dashboard.html', user:'dashboard.html' };
+document.getElementById('navHome').href = roleHome[session?.role] || 'dashboard.html';
+document.getElementById('sidebarName').textContent = session?.name || 'User';
+document.getElementById('sidebarAvatar').textContent = session?.name?.charAt(0).toUpperCase() || 'U';
+document.getElementById('sidebarRole').textContent = (session?.role || 'user').charAt(0).toUpperCase() + (session?.role || 'user').slice(1);
+
+const MOCK_CASES = [
+  { id:'LL-2025-089', title:'Rent Deposit Dispute',         type:'Property', status:'active',  filed:'15 Jan 2026', nextDate:'6 Mar 2026',  lawyer:'Adv. Priya Singh', priority:'high',
+    updates:[{date:'4 Mar',text:'Hearing adjourned to 6 Mar'},{ date:'20 Feb',text:'Evidence submitted by lawyer'},{ date:'15 Jan',text:'Case filed successfully'}] },
+  { id:'LL-2025-102', title:'Consumer Complaint — Samsung', type:'Consumer', status:'review',  filed:'28 Jan 2026', nextDate:'12 Mar 2026', lawyer:'Adv. R. Kapoor',    priority:'medium',
+    updates:[{date:'1 Mar',text:'Case moved to review stage'},{date:'28 Jan',text:'Case filed successfully'}] },
+  { id:'LL-2026-014', title:'Flat Ownership Dispute',       type:'Property', status:'hearing', filed:'5 Feb 2026',  nextDate:'8 Mar 2026',  lawyer:'Adv. Priya Singh', priority:'high',
+    updates:[{date:'5 Mar',text:'Hearing set for 8 Mar at Delhi HC'},{date:'5 Feb',text:'Case filed successfully'}] },
+];
+
+let activeFilter = 'all';
+let selectedType  = '';
+let currentStep   = 1;
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b => { b.classList.remove('bg-indigo-500/20','text-indigo-300'); b.classList.add('text-slate-500','glass'); });
+  const t = document.getElementById('f-' + f);
+  if (t) { t.classList.add('bg-indigo-500/20','text-indigo-300'); t.classList.remove('text-slate-500'); }
+  renderCases();
+}
+
+function renderCases() {
+  const q = document.getElementById('caseSearch').value.toLowerCase();
+  let filtered = activeFilter === 'all' ? MOCK_CASES : MOCK_CASES.filter(c => c.status === activeFilter);
+  if (q) filtered = filtered.filter(c => c.title.toLowerCase().includes(q) || c.id.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
+
+  document.getElementById('statTotal').textContent   = MOCK_CASES.length;
+  document.getElementById('statActive').textContent  = MOCK_CASES.filter(c => c.status==='active').length;
+  document.getElementById('statHearing').textContent = MOCK_CASES.filter(c => c.status==='hearing').length;
+  document.getElementById('statClosed').textContent  = MOCK_CASES.filter(c => c.status==='closed').length;
+
+  const grid = document.getElementById('caseGrid');
+  const empty = document.getElementById('emptyState');
+  if (!filtered.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  const statusConfig = {
+    active:  { badge:'badge-active',  icon:'fa-circle-play',       label:'Active'    },
+    review:  { badge:'badge-review',  icon:'fa-magnifying-glass',  label:'In Review' },
+    hearing: { badge:'badge-hearing', icon:'fa-gavel',             label:'Hearing Set'},
+    closed:  { badge:'badge-closed',  icon:'fa-check-circle',      label:'Closed'    },
+  };
+  const typeColors = { Property:'text-amber-400 bg-amber-500/15', Family:'text-pink-400 bg-pink-500/15', Consumer:'text-green-400 bg-green-500/15', Labour:'text-blue-400 bg-blue-500/15', Criminal:'text-red-400 bg-red-500/15', Other:'text-purple-400 bg-purple-500/15' };
+
+  grid.innerHTML = filtered.map(c => {
+    const sc = statusConfig[c.status] || statusConfig.active;
+    const tc = typeColors[c.type] || typeColors.Other;
+    return `
+    <div class="case-card glass rounded-2xl p-5 space-y-4" onclick="openDrawer('${c.id}')">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <p class="text-white font-bold text-base leading-tight truncate">${c.title}</p>
+          <p class="text-slate-500 text-xs mt-1">#${c.id}</p>
+        </div>
+        <span class="badge ${sc.badge} flex-shrink-0"><i class="fas ${sc.icon} text-xs"></i>${sc.label}</span>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs px-2.5 py-1 rounded-lg font-medium ${tc}">${c.type}</span>
+        <span class="badge ${c.priority==='high'?'bg-red-500/15 text-red-400 border border-red-500/25':c.priority==='medium'?'bg-amber-500/15 text-amber-400 border border-amber-500/25':'bg-slate-500/15 text-slate-400 border border-slate-500/25'}">${c.priority}</span>
+      </div>
+      <div class="space-y-1.5 text-xs">
+        <div class="flex justify-between"><span class="text-slate-500">Lawyer</span><span class="text-slate-300 font-medium">${c.lawyer}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Filed</span><span class="text-slate-300">${c.filed}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Next Date</span><span class="${c.status==='hearing'?'text-amber-300 font-semibold':'text-slate-300'}">${c.nextDate}</span></div>
+      </div>
+      <div class="pt-1 border-t border-white/5 flex items-center justify-between">
+        <span class="text-slate-600 text-xs">${c.updates.length} update${c.updates.length!==1?'s':''}</span>
+        <span class="text-indigo-400 text-xs font-medium">View Details <i class="fas fa-arrow-right ml-1 text-xs"></i></span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDrawer(id) {
+  const c = MOCK_CASES.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('drawerCaseId').textContent   = c.id;
+  document.getElementById('drawerCaseType').textContent = `${c.type} · Filed ${c.filed}`;
+  const sc = { active:'badge-active', review:'badge-review', hearing:'badge-hearing', closed:'badge-closed' };
+  const statusLabel = { active:'Active', review:'In Review', hearing:'Hearing Set', closed:'Closed' };
+  document.getElementById('drawerBody').innerHTML = `
+    <div class="space-y-5">
+      <div>
+        <h3 class="text-white font-bold text-lg">${c.title}</h3>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <span class="badge ${sc[c.status]}">${statusLabel[c.status]}</span>
+          <span class="glass rounded-full px-3 py-1 text-xs text-slate-400">${c.type}</span>
+          <span class="glass rounded-full px-3 py-1 text-xs ${c.priority==='high'?'text-red-400':c.priority==='medium'?'text-amber-400':'text-slate-400'}">${c.priority} priority</span>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-4 space-y-2.5">
+        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Case Info</p>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div><p class="text-slate-500 text-xs">Case ID</p><p class="text-amber-300 font-mono text-xs">${c.id}</p></div>
+          <div><p class="text-slate-500 text-xs">Lawyer</p><p class="text-white text-xs font-medium">${c.lawyer}</p></div>
+          <div><p class="text-slate-500 text-xs">Filed On</p><p class="text-white text-xs">${c.filed}</p></div>
+          <div><p class="text-slate-500 text-xs">Next Date</p><p class="text-white text-xs font-semibold ${c.status==='hearing'?'text-amber-300':''}">${c.nextDate}</p></div>
+        </div>
+      </div>
+      <div>
+        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">Case Timeline</p>
+        <div class="relative space-y-4 pl-10">
+          ${c.updates.map((u,i) => `
+            <div class="relative">
+              ${i < c.updates.length-1 ? '<div class="absolute left-[-21px] top-6 w-px h-full bg-white/8"></div>' : ''}
+              <div class="absolute left-[-28px] top-1 w-4 h-4 rounded-full ${i===0?'bg-indigo-500 border-2 border-indigo-300':'bg-white/10 border border-white/20'} flex items-center justify-center">
+                ${i===0?'<div class="w-1.5 h-1.5 bg-white rounded-full"></div>':''}
+              </div>
+              <p class="text-white text-sm font-medium">${u.text}</p>
+              <p class="text-slate-600 text-xs mt-0.5">${u.date}</p>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('caseDrawer').classList.replace('translate-x-full','translate-x-0');
+  document.getElementById('drawerOverlay').classList.remove('hidden');
+}
+
+function closeDrawer() {
+  document.getElementById('caseDrawer').classList.replace('translate-x-0','translate-x-full');
+  document.getElementById('drawerOverlay').classList.add('hidden');
+}
+
+// New Case Modal
+function openNewCaseModal() { currentStep = 1; selectedType = ''; showStep(1); document.getElementById('newCaseModal').classList.remove('hidden'); }
+function closeNewCaseModal() { document.getElementById('newCaseModal').classList.add('hidden'); }
+
+function showStep(n) {
+  [1,2,3].forEach(i => document.getElementById('formStep'+i).classList.add('hidden'));
+  document.getElementById('formStep'+n).classList.remove('hidden');
+  [2,3].forEach(i => {
+    document.getElementById('step'+i+'Circle').className = `w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${i<=n?'bg-indigo-500 text-white':'bg-white/10 text-slate-400'}`;
+    document.getElementById('step'+i+'Label').className = i<=n?'text-indigo-300 text-xs font-medium':'text-slate-500 text-xs';
+  });
+}
+
+function goStep(n) {
+  if (n === 2) {
+    if (!document.getElementById('caseTitle').value.trim()) { showToast('Please enter a case title.','error'); return; }
+    if (!selectedType) { showToast('Please select a case type.','error'); return; }
+  }
+  if (n === 3) {
+    if (!document.getElementById('caseDesc').value.trim()) { showToast('Please describe the issue.','error'); return; }
+    const box = document.getElementById('caseReviewBox');
+    box.innerHTML = `
+      <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">Review Your Case</p>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-slate-500">Title</span><span class="text-white font-medium">${document.getElementById('caseTitle').value}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Type</span><span class="text-white">${selectedType}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Urgency</span><span class="text-white">${document.getElementById('caseUrgency').value}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Date</span><span class="text-white">${document.getElementById('caseDate').value || 'Not specified'}</span></div>
+        <div class="pt-2 border-t border-white/8"><p class="text-slate-500 text-xs mb-1">Description</p><p class="text-slate-300 text-xs leading-relaxed">${document.getElementById('caseDesc').value.slice(0,120)}${document.getElementById('caseDesc').value.length>120?'...':''}</p></div>
+      </div>`;
+  }
+  currentStep = n; showStep(n);
+}
+
+function selectCaseType(btn, type) {
+  selectedType = type;
+  document.querySelectorAll('.type-btn').forEach(b => { b.classList.remove('ring-2','ring-indigo-500','bg-indigo-500/15'); });
+  btn.classList.add('ring-2','ring-indigo-500','bg-indigo-500/15');
+}
+
+function submitNewCase() {
+  const newId = 'LL-2026-' + (Math.floor(Math.random()*900)+100);
+  MOCK_CASES.unshift({ id:newId, title:document.getElementById('caseTitle').value, type:selectedType, status:'active', filed:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}), nextDate:'Pending', lawyer:'Pending Assignment', priority:document.getElementById('caseUrgency').value==='Critical'?'high':document.getElementById('caseUrgency').value==='Urgent'?'medium':'low', updates:[{date:'Today',text:'Case filed successfully'}] });
+  closeNewCaseModal();
+  renderCases();
+  showToast(`Case ${newId} filed successfully!`, 'success');
+}
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+  const open = !s.classList.contains('-translate-x-full');
+  s.classList.toggle('-translate-x-full', open);
+  o.classList.toggle('hidden', open);
+}
+
+function handleLogout() {
+  localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session');
+  window.location.href = 'login.html';
+}
+
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
+  t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+
+renderCases();
+</script>
+</body>
+</html>

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Planning Tools — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},animation:{'fade-up':'fadeUp 0.5s ease-out forwards','spin-slow':'spin 1.5s linear infinite'},keyframes:{fadeUp:{'0%':{opacity:'0',transform:'translateY(14px)'},'100%':{opacity:'1',transform:'translateY(0)'}}}}}}</script>
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e8f0}
+    .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-dark{background:rgba(10,10,20,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06)}
+    .gradient-text{background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);transition:all 0.3s}
+    .btn-primary:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,0.35)}
+    .sidebar-link{transition:all 0.2s;border-radius:0.75rem}
+    .sidebar-link:hover{background:rgba(255,255,255,0.06);color:#fff}
+    .sidebar-link.active{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .tool-tab{transition:all 0.2s;cursor:pointer;border-radius:0.75rem}
+    .tool-tab:hover{background:rgba(255,255,255,0.06);color:#fff}
+    .tool-tab.active{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .checklist-item{transition:all 0.2s}
+    .checklist-item.done .item-text{text-decoration:line-through;color:#475569}
+    .checklist-item.done .item-icon{background:rgba(34,197,94,0.2);border-color:rgba(34,197,94,0.3);color:#4ade80}
+    .timeline-step{transition:all 0.25s}
+    .timeline-step.active-step{border-color:rgba(99,102,241,0.5);background:rgba(99,102,241,0.1)}
+    .timeline-step.done-step{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.06)}
+    .cost-bar{height:8px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden}
+    .cost-fill{height:100%;border-radius:4px;transition:width 1s ease}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;font-size:0.7rem;font-weight:600}
+    .badge-green{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.25)}
+    .badge-amber{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)}
+    .badge-red{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25)}
+    .badge-indigo{background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><i class="fas fa-scale-balanced text-white text-xs"></i></div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm" id="sidebarAvatar">U</div>
+      <div><p class="text-white font-semibold text-sm" id="sidebarName">User</p><p class="text-slate-500 text-xs" id="sidebarRole">Citizen</p></div>
+    </div>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <a id="navHome" href="dashboard.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gauge-high w-4 text-center"></i> Dashboard</a>
+    <a href="cases.html"     class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-folder-open w-4 text-center"></i> Cases</a>
+    <a href="hearings.html"  class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gavel w-4 text-center"></i> Hearings</a>
+    <a href="documents.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-magnifying-glass w-4 text-center"></i> Documents</a>
+    <a href="drafts.html"    class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-pen w-4 text-center"></i> Drafts</a>
+    <a href="assistant.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-robot w-4 text-center"></i> AI Assistant</a>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-book-open w-4 text-center"></i> Legal Awareness</a>
+    <a href="planning.html"  class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium"><i class="fas fa-diagram-project w-4 text-center text-indigo-400"></i> Planning Tools</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-white/5">
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400"><i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out</button>
+  </div>
+</aside>
+<div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white"><i class="fas fa-bars text-lg"></i></button>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i><i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium">Planning Tools</span>
+    </div>
+    <!-- Tool Tabs in header -->
+    <div class="flex-1 flex items-center gap-1 overflow-x-auto ml-0 sm:ml-6">
+      <button onclick="switchTool('checklist')" id="tab-checklist" class="tool-tab active text-xs font-medium px-3 py-1.5 text-white whitespace-nowrap"><i class="fas fa-list-check mr-1.5"></i>Checklist</button>
+      <button onclick="switchTool('timeline')"  id="tab-timeline"  class="tool-tab text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap"><i class="fas fa-timeline mr-1.5"></i>Timeline</button>
+      <button onclick="switchTool('cost')"      id="tab-cost"      class="tool-tab text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap"><i class="fas fa-indian-rupee-sign mr-1.5"></i>Cost Estimator</button>
+      <button onclick="switchTool('strategy')"  id="tab-strategy"  class="tool-tab text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap"><i class="fas fa-chess mr-1.5"></i>Strategy Builder</button>
+      <button onclick="switchTool('deadlines')" id="tab-deadlines" class="tool-tab text-xs font-medium px-3 py-1.5 text-slate-500 whitespace-nowrap"><i class="fas fa-calendar-xmark mr-1.5"></i>Deadlines</button>
+    </div>
+  </header>
+
+  <main class="flex-1 overflow-y-auto px-6 py-6">
+
+    <!-- ── TOOL: CHECKLIST ── -->
+    <div id="tool-checklist" class="space-y-6">
+      <div class="glass rounded-2xl p-6 space-y-4" style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(168,85,247,0.05));border-color:rgba(99,102,241,0.2)">
+        <div>
+          <h2 class="text-white font-bold text-lg">AI Case Checklist Generator</h2>
+          <p class="text-slate-400 text-sm mt-0.5">Enter your case type — get a complete action checklist instantly</p>
+        </div>
+        <div class="flex gap-3 flex-col sm:flex-row">
+          <div class="flex-1 relative">
+            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none"></i>
+            <input id="checklistInput" type="text" placeholder="e.g. property dispute, consumer complaint, divorce..."
+              class="w-full bg-white/4 border border-white/8 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
+              onkeydown="if(event.key==='Enter') generateChecklist()"/>
+          </div>
+          <button onclick="generateChecklist()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold text-sm flex items-center gap-2 flex-shrink-0">
+            <i class="fas fa-wand-magic-sparkles text-xs"></i> Generate
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setChecklistType('property dispute')"   class="glass rounded-full px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-all">Property Dispute</button>
+          <button onclick="setChecklistType('consumer complaint')" class="glass rounded-full px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-all">Consumer Complaint</button>
+          <button onclick="setChecklistType('divorce')"            class="glass rounded-full px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-all">Divorce</button>
+          <button onclick="setChecklistType('labour dispute')"     class="glass rounded-full px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-all">Labour Dispute</button>
+          <button onclick="setChecklistType('fir complaint')"      class="glass rounded-full px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-all">FIR / Criminal</button>
+          <button onclick="setChecklistType('rti application')"    class="glass rounded-full px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-all">RTI Application</button>
+        </div>
+      </div>
+
+      <!-- Checklist Output -->
+      <div id="checklistOutput" class="hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-white font-bold text-base" id="checklistTitle">Checklist</h3>
+            <p class="text-slate-500 text-xs mt-0.5" id="checklistSubtitle"></p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge badge-indigo" id="checklistProgress">0/0 Done</span>
+            <button onclick="resetChecklist()" class="glass px-3 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white transition-all"><i class="fas fa-rotate mr-1"></i>Reset</button>
+          </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="cost-bar"><div id="checklistBar" class="cost-fill bg-gradient-to-r from-indigo-500 to-purple-500" style="width:0%"></div></div>
+        <!-- Items -->
+        <div id="checklistItems" class="space-y-2"></div>
+        <div class="glass rounded-2xl p-4 flex items-center justify-between gap-3" style="border-color:rgba(99,102,241,0.2);background:rgba(99,102,241,0.05)">
+          <p class="text-slate-400 text-xs">Need to generate a legal document for any of these steps?</p>
+          <a href="drafts.html" class="glass px-4 py-2 rounded-xl text-xs text-indigo-300 hover:bg-indigo-500/10 transition-all flex-shrink-0"><i class="fas fa-file-pen mr-1.5"></i>Open Drafts</a>
+        </div>
+      </div>
+
+      <!-- Generating skeleton -->
+      <div id="checklistGenerating" class="hidden glass rounded-2xl p-8 text-center space-y-3">
+        <i class="fas fa-circle-notch text-indigo-400 text-3xl animate-spin-slow"></i>
+        <p class="text-white font-semibold">Generating checklist...</p>
+        <p class="text-slate-500 text-sm">Analyzing case type and building action items</p>
+      </div>
+    </div>
+
+    <!-- ── TOOL: TIMELINE ── -->
+    <div id="tool-timeline" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-white font-bold text-lg">Case Timeline Tracker</h2>
+          <p class="text-slate-400 text-sm mt-0.5">Visual progress tracker for your active case</p>
+        </div>
+        <select id="timelineCaseSelect" onchange="renderTimeline()" class="bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+          <option class="bg-slate-900" value="0">LL-2025-089 — Rent Dispute</option>
+          <option class="bg-slate-900" value="1">LL-2026-014 — Flat Ownership</option>
+          <option class="bg-slate-900" value="2">LL-2025-102 — Consumer</option>
+        </select>
+      </div>
+      <div id="timelineView" class="space-y-3"></div>
+    </div>
+
+    <!-- ── TOOL: COST ESTIMATOR ── -->
+    <div id="tool-cost" class="hidden space-y-6">
+      <div>
+        <h2 class="text-white font-bold text-lg">Legal Cost Estimator</h2>
+        <p class="text-slate-400 text-sm mt-0.5">Estimate total legal expenses for your case type</p>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Inputs -->
+        <div class="glass rounded-2xl p-6 space-y-4">
+          <h3 class="text-white font-semibold text-sm">Case Parameters</h3>
+          <div class="space-y-3">
+            <div class="space-y-1.5">
+              <label class="text-slate-400 text-xs font-medium">Case Type</label>
+              <select id="costCaseType" onchange="estimateCost()" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+                <option class="bg-slate-900">Property Dispute</option>
+                <option class="bg-slate-900">Consumer Complaint</option>
+                <option class="bg-slate-900">Family / Divorce</option>
+                <option class="bg-slate-900">Labour Dispute</option>
+                <option class="bg-slate-900">Criminal Defence</option>
+                <option class="bg-slate-900">RTI / PIL</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-slate-400 text-xs font-medium">Court Level</label>
+              <select id="costCourtLevel" onchange="estimateCost()" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+                <option class="bg-slate-900">District Court</option>
+                <option class="bg-slate-900">High Court</option>
+                <option class="bg-slate-900">Supreme Court</option>
+                <option class="bg-slate-900">Consumer Forum</option>
+                <option class="bg-slate-900">Labour Court / Tribunal</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-slate-400 text-xs font-medium">Estimated Duration</label>
+              <select id="costDuration" onchange="estimateCost()" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+                <option class="bg-slate-900">6 months</option>
+                <option class="bg-slate-900">1 year</option>
+                <option class="bg-slate-900">2 years</option>
+                <option class="bg-slate-900">3+ years</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-slate-400 text-xs font-medium">Complexity</label>
+              <div class="flex gap-2">
+                <button onclick="setComplexity('low',this)"    class="complexity-btn flex-1 glass rounded-xl py-2 text-xs text-slate-400 hover:text-white transition-all">Simple</button>
+                <button onclick="setComplexity('medium',this)" class="complexity-btn flex-1 glass rounded-xl py-2 text-xs text-slate-400 hover:text-white transition-all selected-complexity bg-indigo-500/20 text-indigo-300 border-indigo-500/30">Medium</button>
+                <button onclick="setComplexity('high',this)"   class="complexity-btn flex-1 glass rounded-xl py-2 text-xs text-slate-400 hover:text-white transition-all">Complex</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Output -->
+        <div class="glass rounded-2xl p-6 space-y-5" id="costOutput">
+          <h3 class="text-white font-semibold text-sm">Cost Breakdown</h3>
+          <div class="space-y-4" id="costBreakdown"></div>
+          <div class="border-t border-white/8 pt-4 flex items-center justify-between">
+            <span class="text-slate-400 text-sm font-semibold">Total Estimate</span>
+            <span class="text-white font-black text-2xl" id="costTotal">₹0</span>
+          </div>
+          <div class="glass rounded-xl p-3 flex items-start gap-2" style="border-color:rgba(251,191,36,0.2);background:rgba(251,191,36,0.05)">
+            <i class="fas fa-circle-info text-amber-400 text-xs mt-0.5"></i>
+            <p class="text-amber-300/80 text-xs">Estimates are indicative based on average market rates. Actual costs vary by lawyer, city, and case complexity.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TOOL: STRATEGY BUILDER ── -->
+    <div id="tool-strategy" class="hidden space-y-6">
+      <div>
+        <h2 class="text-white font-bold text-lg">Legal Strategy Builder</h2>
+        <p class="text-slate-400 text-sm mt-0.5">AI-suggested legal strategies based on your situation</p>
+      </div>
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="space-y-3">
+          <label class="text-slate-300 text-sm font-medium">Your Situation</label>
+          <textarea id="strategyInput" rows="5" placeholder="Describe your legal problem in brief..."
+            class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>
+          <div class="space-y-1.5">
+            <label class="text-slate-400 text-xs font-medium">Preferred Outcome</label>
+            <select id="strategyGoal" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+              <option class="bg-slate-900">Monetary Compensation</option>
+              <option class="bg-slate-900">Injunction / Stop Order</option>
+              <option class="bg-slate-900">Property Recovery</option>
+              <option class="bg-slate-900">Job Reinstatement</option>
+              <option class="bg-slate-900">Mutual Settlement</option>
+              <option class="bg-slate-900">Criminal Prosecution</option>
+            </select>
+          </div>
+          <button onclick="generateStrategy()" class="w-full btn-primary rounded-xl py-3 text-white font-semibold text-sm flex items-center justify-center gap-2">
+            <i class="fas fa-chess text-xs"></i> Build Strategy
+          </button>
+        </div>
+        <div class="lg:col-span-2" id="strategyOutput">
+          <div class="glass rounded-2xl p-8 text-center h-full flex flex-col items-center justify-center gap-3">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center"><i class="fas fa-chess text-slate-500 text-2xl"></i></div>
+            <p class="text-slate-400 font-semibold">Describe your situation</p>
+            <p class="text-slate-600 text-sm">AI will suggest the best legal pathways</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TOOL: DEADLINES ── -->
+    <div id="tool-deadlines" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-white font-bold text-lg">Legal Deadlines Tracker</h2>
+          <p class="text-slate-400 text-sm mt-0.5">Never miss a filing deadline or limitation period</p>
+        </div>
+        <button onclick="openAddDeadline()" class="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold">
+          <i class="fas fa-plus text-xs"></i> Add Deadline
+        </button>
+      </div>
+      <!-- Limitation Periods Reference -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center"><i class="fas fa-clock text-amber-400 text-sm"></i></div>
+          <div><h3 class="text-white font-semibold text-sm">Limitation Periods — Quick Reference</h3><p class="text-slate-500 text-xs">Under Limitation Act 1963</p></div>
+        </div>
+        <div class="divide-y divide-white/5" id="limitationList"></div>
+      </div>
+      <!-- Active Deadlines -->
+      <div>
+        <h3 class="text-white font-semibold text-sm mb-3">Your Tracked Deadlines</h3>
+        <div id="deadlinesList" class="space-y-3"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Deadline Modal -->
+<div id="addDeadlineModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAddDeadline()"></div>
+  <div class="glass-dark rounded-3xl w-full max-w-sm relative z-10 animate-fade-up p-7 space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-white font-bold text-base">Add Deadline</h3>
+      <button onclick="closeAddDeadline()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-xs font-medium">Deadline Title</label>
+        <input id="dlTitle" type="text" placeholder="e.g. File consumer complaint"
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-xs font-medium">Due Date</label>
+        <input id="dlDate" type="date" style="color-scheme:dark"
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-xs font-medium">Case ID (optional)</label>
+        <input id="dlCase" type="text" placeholder="e.g. LL-2025-089"
+          class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-slate-300 text-xs font-medium">Priority</label>
+        <select id="dlPriority" class="w-full bg-white/4 border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-indigo-500/50 transition-all">
+          <option class="bg-slate-900">High</option>
+          <option class="bg-slate-900" selected>Medium</option>
+          <option class="bg-slate-900">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeAddDeadline()" class="flex-1 glass rounded-xl py-2.5 text-sm text-slate-300 hover:bg-white/8 transition-all font-medium">Cancel</button>
+      <button onclick="saveDeadline()" class="flex-1 btn-primary rounded-xl py-2.5 text-sm text-white font-semibold">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const session = JSON.parse(localStorage.getItem('ll_session') || sessionStorage.getItem('ll_session') || 'null');
+if (!session || !session.token) { window.location.href = 'login.html'; }
+const roleHome = { admin:'admin-dashboard.html', judge:'judge-dashboard.html', lawyer:'lawyer-dashboard.html', user:'dashboard.html' };
+document.getElementById('navHome').href = roleHome[session?.role] || 'dashboard.html';
+document.getElementById('sidebarName').textContent = session?.name || 'User';
+document.getElementById('sidebarAvatar').textContent = session?.name?.charAt(0).toUpperCase() || 'U';
+document.getElementById('sidebarRole').textContent = (session?.role||'user').charAt(0).toUpperCase()+(session?.role||'user').slice(1);
+
+// ── Tool Switcher
+function switchTool(name) {
+  ['checklist','timeline','cost','strategy','deadlines'].forEach(t => {
+    document.getElementById('tool-'+t).classList.add('hidden');
+    document.getElementById('tab-'+t).classList.remove('active','text-white');
+    document.getElementById('tab-'+t).classList.add('text-slate-500');
+  });
+  document.getElementById('tool-'+name).classList.remove('hidden');
+  document.getElementById('tab-'+name).classList.add('active','text-white');
+  document.getElementById('tab-'+name).classList.remove('text-slate-500');
+  if (name === 'timeline')  renderTimeline();
+  if (name === 'cost')      estimateCost();
+  if (name === 'deadlines') renderDeadlines();
+}
+
+// ══════════════════════════════
+// CHECKLIST
+// ══════════════════════════════
+const CHECKLISTS = {
+  'property': {
+    title:'Property Dispute Checklist', subtitle:'Documents, steps & legal actions for property disputes',
+    items:[
+      { text:'Collect all title deeds and ownership documents',           priority:'high'   },
+      { text:'Obtain sale agreement / registered sale deed',              priority:'high'   },
+      { text:'Get property tax receipts (last 3 years)',                 priority:'medium' },
+      { text:'Collect encumbrance certificate from Sub-Registrar',        priority:'high'   },
+      { text:'Gather witness statements and photographs of property',     priority:'medium' },
+      { text:'Send legal notice to opposing party (15-day deadline)',     priority:'high'   },
+      { text:'Consult a property lawyer for case evaluation',             priority:'high'   },
+      { text:'File suit in appropriate civil court',                      priority:'high'   },
+      { text:'Apply for interim injunction if possession threatened',     priority:'medium' },
+      { text:'Arrange for court fee payment',                             priority:'medium' },
+      { text:'File affidavit of evidence when scheduled',                priority:'low'    },
+    ]
+  },
+  'consumer': {
+    title:'Consumer Complaint Checklist', subtitle:'Step-by-step guide under Consumer Protection Act 2019',
+    items:[
+      { text:'Collect purchase receipt / invoice / order confirmation',   priority:'high'   },
+      { text:'Document the defect with photos or videos',                priority:'high'   },
+      { text:'Preserve all communication with the company',              priority:'high'   },
+      { text:'Send written complaint to company (keep copy)',             priority:'high'   },
+      { text:'File complaint on National Consumer Helpline (1800-11-4000)',priority:'medium'},
+      { text:'Wait 30 days for company response before court filing',    priority:'medium' },
+      { text:'Determine appropriate forum (District/State/National)',    priority:'medium' },
+      { text:'Register on e-DAAKHIL portal (edaakhil.nic.in)',           priority:'high'   },
+      { text:'Pay court fee (₹100–₹250 for District Forum)',             priority:'medium' },
+      { text:'Attach all supporting documents to complaint',             priority:'high'   },
+    ]
+  },
+  'divorce': {
+    title:'Divorce Case Checklist', subtitle:'Mutual consent & contested divorce preparation',
+    items:[
+      { text:'Obtain marriage certificate (registered)',                  priority:'high'   },
+      { text:'Collect proof of 1-year separation (messages, bills)',      priority:'high'   },
+      { text:'List all shared assets and liabilities',                   priority:'high'   },
+      { text:'Arrange child custody discussion if applicable',           priority:'high'   },
+      { text:'Agree on alimony terms (for mutual consent)',              priority:'medium' },
+      { text:'Hire a family law advocate',                               priority:'high'   },
+      { text:'File joint petition in Family Court',                      priority:'high'   },
+      { text:'Attend first motion hearing',                              priority:'high'   },
+      { text:'Complete 6-month waiting period (or apply for waiver)',    priority:'medium' },
+      { text:'Attend second motion hearing for decree',                  priority:'high'   },
+    ]
+  },
+  'labour': {
+    title:'Labour Dispute Checklist', subtitle:'Steps for wrongful termination, unpaid wages, and harassment',
+    items:[
+      { text:'Collect employment contract / offer letter',               priority:'high'   },
+      { text:'Gather payslips and bank statements showing unpaid wages', priority:'high'   },
+      { text:'Save all written communication with employer (emails/chats)',priority:'high' },
+      { text:'Obtain termination letter if dismissed',                   priority:'high'   },
+      { text:'File complaint with Labour Commissioner',                  priority:'high'   },
+      { text:'Register grievance on Shram Suvidha portal',               priority:'medium' },
+      { text:'Contact HR and send written demand notice',                priority:'medium' },
+      { text:'Approach EPFO if PF not credited',                        priority:'medium' },
+      { text:'Hire a labour law advocate for court proceedings',         priority:'high'   },
+      { text:'File application before Labour Court under IDA 1947',      priority:'high'   },
+    ]
+  },
+  'fir': {
+    title:'FIR / Criminal Case Checklist', subtitle:'Steps to file or respond to an FIR under BNSS 2023',
+    items:[
+      { text:'Document the incident with date, time, place, witnesses',  priority:'high'   },
+      { text:'Visit police station and request FIR registration',        priority:'high'   },
+      { text:'If refused, send written complaint to SP or Magistrate',   priority:'high'   },
+      { text:'Obtain free copy of FIR (mandatory right)',                priority:'high'   },
+      { text:'Preserve evidence (photos, CCTV footage if available)',    priority:'high'   },
+      { text:'Hire a criminal law advocate immediately',                 priority:'high'   },
+      { text:'Apply for anticipatory bail if arrest feared (Sec 482 BNSS)',priority:'high' },
+      { text:'Record statements of witnesses at earliest',               priority:'medium' },
+      { text:'Apply for certified copy of charge sheet when filed',      priority:'medium' },
+      { text:'Attend all court hearings on scheduled dates',             priority:'high'   },
+    ]
+  },
+  'rti': {
+    title:'RTI Application Checklist', subtitle:'Right to Information filing and follow-up steps',
+    items:[
+      { text:'Identify the correct Public Authority and PIO',            priority:'high'   },
+      { text:'Draft RTI application clearly specifying information sought',priority:'high' },
+      { text:'Arrange ₹10 application fee (IPO / online for central)',   priority:'medium' },
+      { text:'File online at rtionline.gov.in (central) or state portal',priority:'high'  },
+      { text:'Keep acknowledgement / receipt of application',            priority:'high'   },
+      { text:'Track response within 30-day deadline',                    priority:'medium' },
+      { text:'If no response in 30 days, file First Appeal immediately', priority:'high'   },
+      { text:'If First Appeal unsatisfactory, file Second Appeal to CIC/SIC',priority:'medium'},
+      { text:'Keep copies of all correspondence',                        priority:'medium' },
+    ]
+  },
+};
+
+function setChecklistType(type) {
+  document.getElementById('checklistInput').value = type;
+  generateChecklist();
+}
+
+let checklistData = [];
+
+function generateChecklist() {
+  const input = document.getElementById('checklistInput').value.trim().toLowerCase();
+  if (!input) { showToast('Enter a case type first.','error'); return; }
+
+  let key = 'consumer';
+  if (input.includes('property') || input.includes('rent') || input.includes('land')) key = 'property';
+  else if (input.includes('divorce') || input.includes('marriage') || input.includes('family')) key = 'divorce';
+  else if (input.includes('labour') || input.includes('salary') || input.includes('employ')) key = 'labour';
+  else if (input.includes('fir') || input.includes('criminal') || input.includes('arrest')) key = 'fir';
+  else if (input.includes('rti') || input.includes('information') || input.includes('government')) key = 'rti';
+
+  document.getElementById('checklistOutput').classList.add('hidden');
+  document.getElementById('checklistGenerating').classList.remove('hidden');
+
+  setTimeout(() => {
+    const data = CHECKLISTS[key];
+    checklistData = data.items.map((item, i) => ({ ...item, id:i, done:false }));
+    document.getElementById('checklistGenerating').classList.add('hidden');
+    document.getElementById('checklistOutput').classList.remove('hidden');
+    document.getElementById('checklistTitle').textContent = data.title;
+    document.getElementById('checklistSubtitle').textContent = data.subtitle;
+    renderChecklistItems();
+  }, 1600);
+}
+
+function renderChecklistItems() {
+  const done = checklistData.filter(i => i.done).length;
+  const total = checklistData.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('checklistProgress').textContent = `${done}/${total} Done`;
+  document.getElementById('checklistBar').style.width = pct + '%';
+
+  const pColors = { high:'text-red-400 bg-red-500/15 border-red-500/20', medium:'text-amber-400 bg-amber-500/15 border-amber-500/20', low:'text-slate-400 bg-slate-500/15 border-slate-500/20' };
+
+  document.getElementById('checklistItems').innerHTML = checklistData.map(item => `
+    <div class="checklist-item glass rounded-xl p-4 flex items-center gap-3 cursor-pointer ${item.done?'done':''}" onclick="toggleChecklistItem(${item.id})">
+      <div class="item-icon w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all
+        ${item.done?'bg-green-500/20 border-green-500/30 text-green-400':'bg-white/4 border-white/10 text-slate-600'}">
+        <i class="fas ${item.done?'fa-check':'fa-circle'} text-xs"></i>
+      </div>
+      <p class="item-text flex-1 text-sm text-slate-300 leading-relaxed">${item.text}</p>
+      <span class="text-xs px-2 py-0.5 rounded-full border ${pColors[item.priority]} flex-shrink-0">${item.priority}</span>
+    </div>
+  `).join('');
+}
+
+function toggleChecklistItem(id) {
+  const item = checklistData.find(i => i.id === id);
+  if (item) { item.done = !item.done; renderChecklistItems(); }
+}
+
+function resetChecklist() {
+  checklistData.forEach(i => i.done = false);
+  renderChecklistItems();
+}
+
+// ══════════════════════════════
+// TIMELINE
+// ══════════════════════════════
+const TIMELINES = [
+  {
+    caseId:'LL-2025-089', title:'Rent Deposit Dispute',
+    steps:[
+      { label:'Case Filed',          date:'15 Jan 2026', status:'done',    desc:'Case registered on LegalLens platform'         },
+      { label:'Lawyer Assigned',     date:'17 Jan 2026', status:'done',    desc:'Adv. Priya Singh assigned to the case'          },
+      { label:'Legal Notice Sent',   date:'22 Jan 2026', status:'done',    desc:'Legal notice served to landlord'                },
+      { label:'Evidence Submission', date:'20 Feb 2026', status:'done',    desc:'Rent receipts and agreement submitted'          },
+      { label:'Hearing — Adjourned', date:'20 Feb 2026', status:'done',    desc:'First hearing adjourned to 6 March'             },
+      { label:'Hearing Scheduled',   date:'6 Mar 2026',  status:'active',  desc:'Evidence hearing at Tis Hazari, Room 4, 10:30 AM'},
+      { label:'Arguments',           date:'TBD',         status:'pending', desc:'Final arguments by both parties'               },
+      { label:'Judgment',            date:'TBD',         status:'pending', desc:'Court verdict expected'                        },
+    ]
+  },
+  {
+    caseId:'LL-2026-014', title:'Flat Ownership Dispute',
+    steps:[
+      { label:'Case Filed',          date:'5 Feb 2026',  status:'done',    desc:'Case registered on LegalLens platform'   },
+      { label:'Lawyer Assigned',     date:'6 Feb 2026',  status:'done',    desc:'Adv. Priya Singh assigned'               },
+      { label:'Legal Notice Sent',   date:'10 Feb 2026', status:'done',    desc:'Notice sent to DLF Builder'              },
+      { label:'Hearing Scheduled',   date:'8 Mar 2026',  status:'active',  desc:'Delhi HC, Court 7, 2:00 PM'             },
+      { label:'Evidence Hearing',    date:'TBD',         status:'pending', desc:'Documents to be submitted'               },
+      { label:'Judgment',            date:'TBD',         status:'pending', desc:'Court verdict expected'                  },
+    ]
+  },
+  {
+    caseId:'LL-2025-102', title:'Consumer Complaint — Samsung',
+    steps:[
+      { label:'Case Filed',          date:'28 Jan 2026', status:'done',    desc:'Consumer complaint registered'           },
+      { label:'Lawyer Assigned',     date:'29 Jan 2026', status:'done',    desc:'Adv. R. Kapoor assigned'                 },
+      { label:'Notice to Samsung',   date:'2 Feb 2026',  status:'done',    desc:'Notice sent via e-DAAKHIL'               },
+      { label:'Case Under Review',   date:'1 Mar 2026',  status:'active',  desc:'Forum reviewing admissibility'          },
+      { label:'Hearing',             date:'12 Mar 2026', status:'pending', desc:'District Forum, Dwarka'                  },
+      { label:'Resolution',          date:'TBD',         status:'pending', desc:'Compensation order expected'             },
+    ]
+  },
+];
+
+function renderTimeline() {
+  const idx = parseInt(document.getElementById('timelineCaseSelect').value);
+  const tl  = TIMELINES[idx];
+  const statusIcon  = { done:'fa-check', active:'fa-circle-dot', pending:'fa-circle' };
+  const statusColor = { done:'bg-green-500 border-green-400', active:'bg-indigo-500 border-indigo-400 animate-pulse', pending:'bg-white/10 border-white/20' };
+  const statusText  = { done:'text-green-400', active:'text-indigo-300', pending:'text-slate-600' };
+
+  document.getElementById('timelineView').innerHTML = `
+    <div class="glass rounded-2xl p-6 space-y-2">
+      <div class="flex items-center justify-between mb-4">
+        <div><p class="text-white font-bold">${tl.title}</p><p class="text-slate-500 text-xs">#${tl.caseId}</p></div>
+        <span class="badge badge-indigo">${tl.steps.filter(s=>s.status==='done').length}/${tl.steps.length} Steps Done</span>
+      </div>
+      <div class="space-y-1">
+        ${tl.steps.map((s,i) => `
+          <div class="timeline-step glass rounded-xl p-4 flex items-start gap-4 ${s.status==='active'?'active-step':s.status==='done'?'done-step':''}">
+            <div class="flex flex-col items-center gap-1 flex-shrink-0">
+              <div class="w-8 h-8 rounded-full border-2 ${statusColor[s.status]} flex items-center justify-center">
+                <i class="fas ${statusIcon[s.status]} text-white text-xs"></i>
+              </div>
+              ${i < tl.steps.length-1 ? `<div class="w-px h-4 ${s.status==='done'?'bg-green-500/40':'bg-white/10'}"></div>` : ''}
+            </div>
+            <div class="flex-1 min-w-0 pb-2">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <p class="text-white font-semibold text-sm">${s.label}</p>
+                <span class="text-xs font-medium ${statusText[s.status]}">${s.date}</span>
+              </div>
+              <p class="text-slate-500 text-xs mt-0.5">${s.desc}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════
+// COST ESTIMATOR
+// ══════════════════════════════
+let complexity = 'medium';
+
+function setComplexity(level, btn) {
+  complexity = level;
+  document.querySelectorAll('.complexity-btn').forEach(b => { b.classList.remove('bg-indigo-500/20','text-indigo-300','border-indigo-500/30'); b.classList.add('text-slate-400'); });
+  btn.classList.add('bg-indigo-500/20','text-indigo-300','border-indigo-500/30');
+  estimateCost();
+}
+
+function estimateCost() {
+  const type     = document.getElementById('costCaseType')?.value || 'Property Dispute';
+  const court    = document.getElementById('costCourtLevel')?.value || 'District Court';
+  const duration = document.getElementById('costDuration')?.value || '1 year';
+
+  const BASE = { 'Property Dispute':45000, 'Consumer Complaint':8000, 'Family / Divorce':35000, 'Labour Dispute':20000, 'Criminal Defence':60000, 'RTI / PIL':5000 };
+  const COURT_MUL = { 'District Court':1, 'High Court':2.5, 'Supreme Court':6, 'Consumer Forum':0.6, 'Labour Court / Tribunal':1.2 };
+  const DUR_MUL   = { '6 months':0.7, '1 year':1, '2 years':1.7, '3+ years':2.8 };
+  const COMP_MUL  = { low:0.6, medium:1, high:1.7 };
+
+  const base   = BASE[type] || 20000;
+  const cmul   = COURT_MUL[court] || 1;
+  const dmul   = DUR_MUL[duration] || 1;
+  const compMul = COMP_MUL[complexity] || 1;
+  const total  = Math.round(base * cmul * dmul * compMul / 1000) * 1000;
+
+  const breakdown = [
+    { label:'Lawyer Fees',       pct:60, amount:Math.round(total*0.60/100)*100 },
+    { label:'Court Filing Fees', pct:10, amount:Math.round(total*0.10/100)*100 },
+    { label:'Documentation',     pct:15, amount:Math.round(total*0.15/100)*100 },
+    { label:'Misc. Expenses',    pct:15, amount:Math.round(total*0.15/100)*100 },
+  ];
+
+  const colors = ['from-indigo-500 to-purple-500','from-blue-400 to-cyan-500','from-amber-400 to-orange-500','from-slate-400 to-slate-600'];
+
+  document.getElementById('costBreakdown').innerHTML = breakdown.map((b,i) => `
+    <div class="space-y-1.5">
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">${b.label}</span>
+        <span class="text-white font-semibold">₹${b.amount.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="cost-bar"><div class="cost-fill bg-gradient-to-r ${colors[i]}" style="width:${b.pct}%"></div></div>
+    </div>
+  `).join('');
+  document.getElementById('costTotal').textContent = '₹' + total.toLocaleString('en-IN');
+}
+
+// ══════════════════════════════
+// STRATEGY BUILDER
+// ══════════════════════════════
+const STRATEGIES = [
+  { keywords:['property','rent','landlord','flat','house','land','evict'],
+    paths:[
+      { title:'Negotiation First', icon:'fa-handshake', color:'text-green-400', steps:['Send formal legal notice demanding resolution', 'Propose mediation through a neutral third party', 'Set 15-day deadline for compliance'] },
+      { title:'Civil Court Route', icon:'fa-gavel', color:'text-indigo-400', steps:['File suit in District Civil Court', 'Apply for interim injunction to prevent further harm', 'Submit all property documents as evidence'] },
+      { title:'Consumer / RERA Forum', icon:'fa-building', color:'text-amber-400', steps:['Check if RERA applies (builder/developer disputes)', 'File complaint with State RERA Authority', 'Faster resolution vs. civil courts'] },
+    ]
+  },
+  { keywords:['consumer','product','defective','company','refund','service'],
+    paths:[
+      { title:'Direct Complaint', icon:'fa-headset', color:'text-green-400', steps:['File on National Consumer Helpline 1800-11-4000', 'Send formal notice to company', 'Give 30 days to resolve'] },
+      { title:'e-DAAKHIL Route',  icon:'fa-computer', color:'text-indigo-400', steps:['Register on edaakhil.nic.in', 'File online consumer complaint', 'Track status via portal'] },
+      { title:'District Forum',   icon:'fa-gavel', color:'text-amber-400', steps:['File before District Consumer Commission', 'Pay ₹100–₹250 court fee', 'Get compensation + punitive damages'] },
+    ]
+  },
+  { keywords:['salary','employ','job','termination','fired','labour','work','wages'],
+    paths:[
+      { title:'Internal Grievance', icon:'fa-building', color:'text-green-400', steps:['Escalate to HR in writing', 'Mention applicable law (Payment of Wages Act)', 'Set 7-day resolution deadline'] },
+      { title:'Labour Commissioner', icon:'fa-shield-halved', color:'text-indigo-400', steps:['File complaint with District Labour Commissioner', 'Attach payslips and employment records', 'Inspector will summon employer'] },
+      { title:'Labour Court',        icon:'fa-gavel', color:'text-red-400', steps:['File application under Sec 33C(2) IDA', 'Claim arrears + interest', 'Typically resolved in 6–12 months'] },
+    ]
+  },
+];
+
+function generateStrategy() {
+  const input = document.getElementById('strategyInput').value.trim().toLowerCase();
+  const goal  = document.getElementById('strategyGoal').value;
+  if (!input) { showToast('Describe your situation first.', 'error'); return; }
+
+  let matched = STRATEGIES[0];
+  for (const s of STRATEGIES) { if (s.keywords.some(k => input.includes(k))) { matched = s; break; } }
+
+  document.getElementById('strategyOutput').innerHTML = `
+    <div class="space-y-4 animate-fade-up">
+      <div class="glass rounded-2xl p-4 flex items-center gap-3" style="border-color:rgba(99,102,241,0.2);background:rgba(99,102,241,0.06)">
+        <i class="fas fa-robot text-indigo-400"></i>
+        <p class="text-slate-300 text-sm">Based on your situation, here are <strong class="text-white">3 legal pathways</strong> recommended by LegalLens AI. Preferred outcome: <span class="text-indigo-300 font-semibold">${goal}</span>.</p>
+      </div>
+      ${matched.paths.map((p,i) => `
+        <div class="glass rounded-2xl p-5 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-white/6 border border-white/10 flex items-center justify-center flex-shrink-0">
+              <i class="fas ${p.icon} ${p.color} text-sm"></i>
+            </div>
+            <div>
+              <p class="text-white font-bold text-sm">Option ${i+1}: ${p.title}</p>
+              <p class="text-slate-500 text-xs">Recommended pathway</p>
+            </div>
+          </div>
+          <div class="space-y-2">
+            ${p.steps.map((s,j) => `
+              <div class="flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0 mt-0.5 text-indigo-300 font-bold text-xs">${j+1}</div>
+                <p class="text-slate-400 text-xs leading-relaxed">${s}</p>
+              </div>
+            `).join('')}
+          </div>
+          <div class="flex gap-2 pt-1">
+            <a href="drafts.html"    class="glass rounded-lg px-3 py-1.5 text-xs text-indigo-300 hover:bg-indigo-500/10 transition-all"><i class="fas fa-file-pen mr-1 text-xs"></i>Generate Draft</a>
+            <a href="assistant.html" class="glass rounded-lg px-3 py-1.5 text-xs text-purple-300 hover:bg-purple-500/10 transition-all"><i class="fas fa-robot mr-1 text-xs"></i>Ask AI</a>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════
+// DEADLINES
+// ══════════════════════════════
+const LIMITATIONS = [
+  { matter:'File a civil suit (general)',          period:'3 years',   act:'Limitation Act, Art 113'        },
+  { matter:'Consumer complaint',                   period:'2 years',   act:'CPA 2019, Sec 69'               },
+  { matter:'Challenge property sale deed',         period:'3 years',   act:'Limitation Act, Art 59'         },
+  { matter:'File appeal in High Court',            period:'90 days',   act:'Limitation Act, Art 116'        },
+  { matter:'File appeal in Supreme Court',         period:'90 days',   act:'Limitation Act, Art 116'        },
+  { matter:'Labour dispute — ID Act',              period:'3 years',   act:'IDA 1947'                       },
+  { matter:'Cheque bounce (Sec 138 NI Act)',        period:'30 days',   act:'After 15-day notice period'     },
+  { matter:'File RTI First Appeal',                period:'30 days',   act:'RTI Act 2005'                   },
+  { matter:'RERA complaint',                       period:'Continuous',act:'RERA Act 2016'                  },
+];
+
+let userDeadlines = JSON.parse(localStorage.getItem('ll_deadlines') || '[]');
+
+function renderDeadlines() {
+  document.getElementById('limitationList').innerHTML = LIMITATIONS.map(l => `
+    <div class="px-6 py-3.5 flex items-center justify-between gap-4 hover:bg-white/3 transition-all">
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-medium truncate">${l.matter}</p>
+        <p class="text-slate-600 text-xs">${l.act}</p>
+      </div>
+      <span class="badge badge-amber flex-shrink-0">${l.period}</span>
+    </div>
+  `).join('');
+
+  const today = new Date();
+  if (!userDeadlines.length) {
+    document.getElementById('deadlinesList').innerHTML = `<div class="glass rounded-2xl p-8 text-center"><i class="fas fa-calendar-check text-slate-600 text-2xl mb-3 block"></i><p class="text-slate-400 font-semibold text-sm">No deadlines tracked yet</p><p class="text-slate-600 text-xs mt-1">Click "Add Deadline" to start tracking</p></div>`;
+    return;
+  }
+
+  document.getElementById('deadlinesList').innerHTML = userDeadlines.map((d,i) => {
+    const due   = new Date(d.date);
+    const diff  = Math.ceil((due - today) / (1000*60*60*24));
+    const urgent = diff <= 3;
+    const overdue = diff < 0;
+    const pColor = { High:'badge-red', Medium:'badge-amber', Low:'badge-green' };
+    return `
+    <div class="glass rounded-2xl p-4 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl ${overdue?'bg-red-500/20 border-red-500/25':urgent?'bg-amber-500/20 border-amber-500/25':'bg-indigo-500/20 border-indigo-500/25'} border flex flex-col items-center justify-center flex-shrink-0">
+        <p class="text-white font-black text-base leading-none">${due.getDate()}</p>
+        <p class="text-slate-500 text-xs">${due.toLocaleDateString('en-IN',{month:'short'})}</p>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white font-semibold text-sm">${d.title}</p>
+        <div class="flex items-center gap-2 mt-1 flex-wrap">
+          ${d.caseId ? `<span class="text-slate-600 text-xs">#${d.caseId}</span>` : ''}
+          <span class="badge ${pColor[d.priority]||'badge-amber'}">${d.priority}</span>
+          <span class="text-xs ${overdue?'text-red-400 font-semibold':urgent?'text-amber-400 font-semibold':'text-slate-500'}">${overdue?'Overdue!':diff===0?'Due today!':diff===1?'Tomorrow':`${diff} days left`}</span>
+        </div>
+      </div>
+      <button onclick="removeDeadline(${i})" class="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"><i class="fas fa-trash text-xs"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function openAddDeadline()  { document.getElementById('addDeadlineModal').classList.remove('hidden'); }
+function closeAddDeadline() { document.getElementById('addDeadlineModal').classList.add('hidden');    }
+
+function saveDeadline() {
+  const title = document.getElementById('dlTitle').value.trim();
+  const date  = document.getElementById('dlDate').value;
+  if (!title || !date) { showToast('Title and date are required.','error'); return; }
+  userDeadlines.push({ title, date, caseId:document.getElementById('dlCase').value.trim(), priority:document.getElementById('dlPriority').value });
+  localStorage.setItem('ll_deadlines', JSON.stringify(userDeadlines));
+  closeAddDeadline();
+  renderDeadlines();
+  showToast('Deadline added!', 'success');
+}
+
+function removeDeadline(i) {
+  userDeadlines.splice(i,1);
+  localStorage.setItem('ll_deadlines', JSON.stringify(userDeadlines));
+  renderDeadlines();
+  showToast('Deadline removed.', 'success');
+}
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+  const open = !s.classList.contains('-translate-x-full');
+  s.classList.toggle('-translate-x-full', open); o.classList.toggle('hidden', open);
+}
+function handleLogout() { localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session'); window.location.href = 'login.html'; }
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
+  t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+estimateCost();
+</script>
+</body>
+</html>

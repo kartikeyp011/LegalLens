@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Documents — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},animation:{'fade-up':'fadeUp 0.5s ease-out forwards','pulse-slow':'pulse 3s ease-in-out infinite','spin-slow':'spin 2s linear infinite'},keyframes:{fadeUp:{'0%':{opacity:'0',transform:'translateY(16px)'},'100%':{opacity:'1',transform:'translateY(0)'}}}}}}</script>
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e8f0}
+    .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-dark{background:rgba(10,10,20,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06)}
+    .gradient-text{background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);transition:all 0.3s}
+    .btn-primary:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,0.35)}
+    .sidebar-link{transition:all 0.2s;border-radius:0.75rem}
+    .sidebar-link:hover{background:rgba(255,255,255,0.06);color:#fff}
+    .sidebar-link.active{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;font-size:0.7rem;font-weight:600}
+    .badge-safe{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.25)}
+    .badge-risk{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.25)}
+    .badge-warn{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)}
+    .drop-zone{border:2px dashed rgba(99,102,241,0.3);transition:all 0.3s}
+    .drop-zone:hover,.drop-zone.drag-over{border-color:rgba(99,102,241,0.7);background:rgba(99,102,241,0.06)}
+    .doc-card{transition:all 0.25s}
+    .doc-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(99,102,241,0.12)}
+    .risk-bar{height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden}
+    .progress-fill{height:100%;border-radius:3px}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+    .analyzing-pulse{animation:pulse 1.5s ease-in-out infinite}
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><i class="fas fa-scale-balanced text-white text-xs"></i></div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm" id="sidebarAvatar">U</div>
+      <div><p class="text-white font-semibold text-sm" id="sidebarName">User</p><p class="text-slate-500 text-xs" id="sidebarRole">Citizen</p></div>
+    </div>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <a id="navHome" href="dashboard.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gauge-high w-4 text-center"></i> Dashboard</a>
+    <a href="cases.html"    class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-folder-open w-4 text-center"></i> Cases</a>
+    <a href="hearings.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gavel w-4 text-center"></i> Hearings</a>
+    <a href="documents.html" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium"><i class="fas fa-file-magnifying-glass w-4 text-center text-indigo-400"></i> Documents</a>
+    <a href="drafts.html"   class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-pen w-4 text-center"></i> Drafts</a>
+    <a href="assistant.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-robot w-4 text-center"></i> AI Assistant</a>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-book-open w-4 text-center"></i> Legal Awareness</a>
+    <a href="planning.html"  class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-diagram-project w-4 text-center"></i> Planning</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-white/5">
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400"><i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out</button>
+  </div>
+</aside>
+<div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white"><i class="fas fa-bars text-lg"></i></button>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i><i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium">Documents</span>
+    </div>
+    <div class="flex-1 max-w-md ml-auto sm:ml-4 relative">
+      <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none"></i>
+      <input type="text" id="docSearch" placeholder="Search documents..." oninput="renderDocs()"
+        class="w-full bg-white/4 border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>
+    </div>
+  </header>
+
+  <main class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+
+    <!-- Upload Zone -->
+    <div class="drop-zone rounded-2xl p-8 text-center cursor-pointer" id="dropZone"
+      onclick="document.getElementById('fileInput').click()"
+      ondragover="e=>{e.preventDefault();dropZone.classList.add('drag-over')}"
+      ondragleave="document.getElementById('dropZone').classList.remove('drag-over')"
+      ondrop="handleDrop(event)">
+      <input type="file" id="fileInput" class="hidden" multiple accept=".pdf,.doc,.docx,.txt,.jpg,.png" onchange="handleFileSelect(this.files)"/>
+      <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-cloud-arrow-up text-indigo-400 text-2xl"></i>
+      </div>
+      <p class="text-white font-bold text-base">Drop files here or click to upload</p>
+      <p class="text-slate-500 text-sm mt-1">PDF, DOCX, TXT, JPG, PNG · Max 10MB per file</p>
+      <div class="flex items-center justify-center gap-4 mt-4 flex-wrap">
+        <span class="glass rounded-full px-3 py-1 text-xs text-indigo-300"><i class="fas fa-robot mr-1.5"></i>AI Analysis</span>
+        <span class="glass rounded-full px-3 py-1 text-xs text-purple-300"><i class="fas fa-shield-halved mr-1.5"></i>Risk Detection</span>
+        <span class="glass rounded-full px-3 py-1 text-xs text-green-300"><i class="fas fa-file-lines mr-1.5"></i>Auto Summary</span>
+      </div>
+    </div>
+
+    <!-- Analyzing Progress (shown during fake AI analysis) -->
+    <div id="analyzingBanner" class="hidden glass rounded-2xl px-6 py-4 flex items-center gap-4" style="border-color:rgba(99,102,241,0.3);background:rgba(99,102,241,0.06)">
+      <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-circle-notch text-indigo-400 animate-spin-slow"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-white font-semibold text-sm" id="analyzingTitle">Analyzing document with AI...</p>
+        <div class="risk-bar mt-2 w-full"><div class="progress-fill bg-gradient-to-r from-indigo-500 to-purple-500" id="analyzingBar" style="width:0%;transition:width 2.5s ease"></div></div>
+      </div>
+      <span class="text-indigo-300 text-xs font-mono" id="analyzingPct">0%</span>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex flex-wrap gap-2">
+      <button onclick="setDocFilter('all')"      id="df-all"      class="doc-filter-tab px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-500/20 text-indigo-300 transition-all">All</button>
+      <button onclick="setDocFilter('pdf')"      id="df-pdf"      class="doc-filter-tab px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 glass transition-all">PDF</button>
+      <button onclick="setDocFilter('docx')"     id="df-docx"     class="doc-filter-tab px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 glass transition-all">DOCX</button>
+      <button onclick="setDocFilter('analyzed')" id="df-analyzed" class="doc-filter-tab px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 glass transition-all">Analyzed</button>
+    </div>
+
+    <!-- Document Grid -->
+    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5" id="docGrid"></div>
+    <div id="docEmpty" class="hidden text-center py-16">
+      <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4"><i class="fas fa-file-slash text-slate-500 text-2xl"></i></div>
+      <p class="text-slate-400 font-semibold">No documents yet</p>
+      <p class="text-slate-600 text-sm mt-1">Upload a document above to get started</p>
+    </div>
+
+  </main>
+</div>
+
+<!-- ANALYSIS RESULT DRAWER -->
+<div id="analysisDrawer" class="fixed inset-y-0 right-0 z-50 w-full sm:w-[460px] glass-dark border-l border-white/8 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+  <div class="px-6 py-5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+    <div><h3 class="text-white font-bold text-base" id="drawerDocName">Analysis</h3><p class="text-slate-500 text-xs mt-0.5" id="drawerDocMeta"></p></div>
+    <button onclick="closeAnalysisDrawer()" class="text-slate-500 hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="flex-1 overflow-y-auto p-6 space-y-5" id="drawerBody"></div>
+  <div class="flex-shrink-0 px-6 py-4 border-t border-white/5 flex gap-3">
+    <a href="assistant.html" class="flex-1 btn-primary rounded-xl py-2.5 text-sm text-white font-semibold text-center"><i class="fas fa-robot mr-2 text-xs"></i>Ask AI About This</a>
+    <a href="drafts.html" class="flex-1 glass rounded-xl py-2.5 text-sm text-indigo-300 hover:bg-indigo-500/10 transition-all font-medium text-center"><i class="fas fa-file-pen mr-2 text-xs"></i>Generate Draft</a>
+  </div>
+</div>
+<div id="drawerOverlay" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm hidden" onclick="closeAnalysisDrawer()"></div>
+
+<script>
+const session = JSON.parse(localStorage.getItem('ll_session') || sessionStorage.getItem('ll_session') || 'null');
+if (!session || !session.token) { window.location.href = 'login.html'; }
+const roleHome = { admin:'admin-dashboard.html', judge:'judge-dashboard.html', lawyer:'lawyer-dashboard.html', user:'dashboard.html' };
+document.getElementById('navHome').href = roleHome[session?.role] || 'dashboard.html';
+document.getElementById('sidebarName').textContent = session?.name || 'User';
+document.getElementById('sidebarAvatar').textContent = session?.name?.charAt(0).toUpperCase() || 'U';
+document.getElementById('sidebarRole').textContent = (session?.role||'user').charAt(0).toUpperCase()+(session?.role||'user').slice(1);
+
+let DOCS = [
+  { id:'D001', name:'Rent_Agreement_2024.pdf',  type:'pdf',  size:'1.2 MB', uploaded:'1 Feb 2026', caseId:'LL-2025-089', analyzed:true,
+    summary:'A residential rent agreement between Rahul Sharma and Krishna Landlords for property at Sector 12, Dwarka. Tenure: 11 months. Rent: ₹22,000/month. Security deposit: ₹44,000.',
+    riskScore:42, risks:[{level:'warn',text:'No arbitration clause — disputes must go to court'},{ level:'risk',text:'Security deposit refund timeline not specified'},{ level:'safe',text:'Termination notice period clearly defined (30 days)'},{ level:'safe',text:'Maintenance responsibility clause present'}]
+  },
+  { id:'D002', name:'Consumer_Notice_Samsung.docx', type:'docx', size:'0.4 MB', uploaded:'29 Jan 2026', caseId:'LL-2025-102', analyzed:true,
+    summary:'Legal notice issued under Consumer Protection Act 2019 to Samsung India Ltd. Complaint regarding defective product sold at Croma, Noida. Compensation sought: ₹85,000.',
+    riskScore:18, risks:[{level:'safe',text:'Proper format under CPA 2019'},{level:'safe',text:'Compensation amount clearly stated'},{level:'warn',text:'No supporting invoice attached in this file'}]
+  },
+  { id:'D003', name:'Sale_Deed_DLF_Flat.pdf', type:'pdf', size:'3.8 MB', uploaded:'6 Feb 2026', caseId:'LL-2026-014', analyzed:false, summary:'', riskScore:0, risks:[] },
+  { id:'D004', name:'Employment_Contract_TechCorp.pdf', type:'pdf', size:'2.1 MB', uploaded:'13 Feb 2026', caseId:'LL-2026-031', analyzed:true,
+    summary:'Employment agreement between Anita Kapoor and TechCorp Solutions. Role: Senior Developer. Package: ₹18L CTC. Notice period: 90 days. Non-compete clause included.',
+    riskScore:67, risks:[{level:'risk',text:'Non-compete clause is broadly worded — 2 year restriction'},{level:'risk',text:'Termination clause gives employer unilateral rights'},{level:'warn',text:'Bonus structure is discretionary, not guaranteed'},{level:'safe',text:'Gratuity and PF provisions are compliant'}]
+  },
+];
+
+let docFilter = 'all';
+
+function setDocFilter(f) {
+  docFilter = f;
+  document.querySelectorAll('.doc-filter-tab').forEach(b => { b.classList.remove('bg-indigo-500/20','text-indigo-300'); b.classList.add('text-slate-500','glass'); });
+  const t = document.getElementById('df-' + f);
+  if (t) { t.classList.add('bg-indigo-500/20','text-indigo-300'); t.classList.remove('text-slate-500'); }
+  renderDocs();
+}
+
+function renderDocs() {
+  const q = (document.getElementById('docSearch').value || '').toLowerCase();
+  let filtered = DOCS.filter(d => {
+    if (docFilter === 'pdf') return d.type === 'pdf';
+    if (docFilter === 'docx') return d.type === 'docx';
+    if (docFilter === 'analyzed') return d.analyzed;
+    return true;
+  }).filter(d => !q || d.name.toLowerCase().includes(q) || d.caseId.toLowerCase().includes(q));
+
+  const grid = document.getElementById('docGrid');
+  const empty = document.getElementById('docEmpty');
+  if (!filtered.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  const typeIcon = { pdf:'fa-file-pdf text-red-400', docx:'fa-file-word text-blue-400', txt:'fa-file-lines text-slate-400', jpg:'fa-file-image text-green-400', png:'fa-file-image text-green-400' };
+  const riskColor = r => r < 30 ? 'from-green-400 to-emerald-500' : r < 60 ? 'from-amber-400 to-orange-500' : 'from-red-400 to-rose-500';
+  const riskLabel = r => r < 30 ? 'Low Risk' : r < 60 ? 'Medium Risk' : 'High Risk';
+  const riskBadge = r => r < 30 ? 'badge-safe' : r < 60 ? 'badge-warn' : 'badge-risk';
+
+  grid.innerHTML = filtered.map(d => `
+    <div class="doc-card glass rounded-2xl p-5 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center flex-shrink-0">
+          <i class="fas ${typeIcon[d.type] || 'fa-file text-slate-400'} text-xl"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-white font-semibold text-sm truncate" title="${d.name}">${d.name}</p>
+          <p class="text-slate-500 text-xs mt-0.5">${d.size} · ${d.uploaded}</p>
+          <p class="text-slate-600 text-xs">#${d.caseId}</p>
+        </div>
+      </div>
+      ${d.analyzed ? `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 text-xs">Risk Score</span>
+            <span class="badge ${riskBadge(d.riskScore)}">${riskLabel(d.riskScore)}</span>
+          </div>
+          <div class="risk-bar">
+            <div class="progress-fill bg-gradient-to-r ${riskColor(d.riskScore)}" style="width:${d.riskScore}%"></div>
+          </div>
+          <p class="text-slate-500 text-xs leading-relaxed line-clamp-2">${d.summary}</p>
+        </div>
+        <button onclick="openAnalysisDrawer('${d.id}')" class="w-full glass rounded-xl py-2.5 text-sm text-indigo-300 hover:bg-indigo-500/10 transition-all font-medium flex items-center justify-center gap-2">
+          <i class="fas fa-magnifying-glass text-xs"></i> View Full Analysis
+        </button>
+      ` : `
+        <div class="text-center py-2">
+          <p class="text-slate-500 text-xs mb-3">Not yet analyzed</p>
+          <button onclick="analyzeDoc('${d.id}')" class="btn-primary w-full rounded-xl py-2.5 text-sm text-white font-semibold flex items-center justify-center gap-2">
+            <i class="fas fa-robot text-xs"></i> Analyze with AI
+          </button>
+        </div>
+      `}
+    </div>
+  `).join('');
+}
+
+function openAnalysisDrawer(id) {
+  const d = DOCS.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('drawerDocName').textContent = d.name;
+  document.getElementById('drawerDocMeta').textContent = `${d.size} · Uploaded ${d.uploaded} · #${d.caseId}`;
+  const riskColor = r => r < 30 ? 'from-green-400 to-emerald-500' : r < 60 ? 'from-amber-400 to-orange-500' : 'from-red-400 to-rose-500';
+  const riskLabel = r => r < 30 ? 'Low Risk' : r < 60 ? 'Medium Risk' : 'High Risk';
+  const riskBadge = r => r < 30 ? 'badge-safe' : r < 60 ? 'badge-warn' : 'badge-risk';
+  const riskIcon  = lv => ({ safe:'fa-check-circle text-green-400', warn:'fa-triangle-exclamation text-amber-400', risk:'fa-circle-xmark text-red-400' })[lv] || 'fa-circle text-slate-400';
+
+  document.getElementById('drawerBody').innerHTML = `
+    <div class="space-y-5">
+      <!-- Risk Meter -->
+      <div class="glass rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Risk Score</p>
+          <span class="badge ${riskBadge(d.riskScore)}">${riskLabel(d.riskScore)}</span>
+        </div>
+        <div class="flex items-end gap-4">
+          <p class="text-5xl font-black text-white">${d.riskScore}</p>
+          <p class="text-slate-500 text-sm pb-1">/100</p>
+        </div>
+        <div class="risk-bar">
+          <div class="progress-fill bg-gradient-to-r ${riskColor(d.riskScore)}" style="width:${d.riskScore}%"></div>
+        </div>
+      </div>
+      <!-- Summary -->
+      <div class="glass rounded-2xl p-5 space-y-2">
+        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">AI Summary</p>
+        <p class="text-slate-300 text-sm leading-relaxed">${d.summary}</p>
+      </div>
+      <!-- Clause Analysis -->
+      <div class="space-y-3">
+        <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Clause Analysis</p>
+        ${d.risks.map(r => `
+          <div class="glass rounded-xl p-3.5 flex items-start gap-3">
+            <i class="fas ${riskIcon(r.level)} text-sm flex-shrink-0 mt-0.5"></i>
+            <p class="text-slate-300 text-sm leading-relaxed">${r.text}</p>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  document.getElementById('analysisDrawer').classList.replace('translate-x-full','translate-x-0');
+  document.getElementById('drawerOverlay').classList.remove('hidden');
+}
+
+function closeAnalysisDrawer() {
+  document.getElementById('analysisDrawer').classList.replace('translate-x-0','translate-x-full');
+  document.getElementById('drawerOverlay').classList.add('hidden');
+}
+
+function analyzeDoc(id) {
+  const banner = document.getElementById('analyzingBanner');
+  const bar    = document.getElementById('analyzingBar');
+  const pct    = document.getElementById('analyzingPct');
+  const d      = DOCS.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('analyzingTitle').textContent = `Analyzing ${d.name} with AI...`;
+  banner.classList.remove('hidden');
+  let progress = 0;
+  bar.style.width = '0%'; pct.textContent = '0%';
+  setTimeout(() => { bar.style.width = '100%'; }, 100);
+  const tick = setInterval(() => {
+    progress = Math.min(progress + Math.random() * 15, 99);
+    pct.textContent = Math.floor(progress) + '%';
+    if (progress >= 99) clearInterval(tick);
+  }, 300);
+  setTimeout(() => {
+    clearInterval(tick); pct.textContent = '100%';
+    setTimeout(() => {
+      banner.classList.add('hidden');
+      d.analyzed  = true;
+      d.riskScore = Math.floor(Math.random() * 70) + 15;
+      d.summary   = 'AI analysis complete. Document reviewed for legal compliance, risk clauses, and key terms. ' + (d.riskScore > 50 ? 'Several high-risk clauses detected — review recommended.' : 'Document appears generally compliant with minor concerns.');
+      d.risks     = [
+        { level:'safe', text:'Document structure and format are legally valid' },
+        { level:d.riskScore>50?'risk':'warn', text:d.riskScore>50?'Unfavorable terms detected in key clauses':'Some ambiguous terms may need clarification' },
+        { level:'safe', text:'Parties and obligations are clearly identified' },
+      ];
+      renderDocs();
+      showToast('AI analysis complete!', 'success');
+    }, 400);
+  }, 3200);
+}
+
+function handleFileSelect(files) {
+  Array.from(files).forEach(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const newDoc = { id:'D'+Date.now(), name:f.name, type:ext, size:(f.size/1024/1024).toFixed(1)+' MB', uploaded:'Today', caseId:'Unlinked', analyzed:false, summary:'', riskScore:0, risks:[] };
+    DOCS.unshift(newDoc);
+    renderDocs();
+    showToast(`${f.name} uploaded successfully.`, 'success');
+  });
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  handleFileSelect(e.dataTransfer.files);
+}
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+  const open = !s.classList.contains('-translate-x-full');
+  s.classList.toggle('-translate-x-full', open); o.classList.toggle('hidden', open);
+}
+function handleLogout() { localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session'); window.location.href = 'login.html'; }
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
+  t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+renderDocs();
+</script>
+</body>
+</html>

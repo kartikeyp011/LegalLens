@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Draft Generator — LegalLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},animation:{'fade-up':'fadeUp 0.5s ease-out forwards','pulse-slow':'pulse 3s ease-in-out infinite','spin-slow':'spin 1.5s linear infinite'},keyframes:{fadeUp:{'0%':{opacity:'0',transform:'translateY(16px)'},'100%':{opacity:'1',transform:'translateY(0)'}}}}}}</script>
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e8f0}
+    .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+    .glass-dark{background:rgba(10,10,20,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06)}
+    .gradient-text{background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);transition:all 0.3s}
+    .btn-primary:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px);box-shadow:0 8px 30px rgba(99,102,241,0.35)}
+    .sidebar-link{transition:all 0.2s;border-radius:0.75rem}
+    .sidebar-link:hover{background:rgba(255,255,255,0.06);color:#fff}
+    .sidebar-link.active{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+    .type-card{transition:all 0.25s;cursor:pointer}
+    .type-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,0.15)}
+    .type-card.selected{border-color:rgba(99,102,241,0.6);background:rgba(99,102,241,0.12)}
+    .draft-output{font-family:'Inter',sans-serif;line-height:1.8;white-space:pre-wrap}
+    .typing-cursor::after{content:'|';animation:blink 1s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="fixed lg:relative z-40 flex flex-col w-64 h-full glass-dark border-r border-white/5 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+  <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><i class="fas fa-scale-balanced text-white text-xs"></i></div>
+      <span class="text-lg font-bold text-white">Legal<span class="gradient-text">Lens</span></span>
+    </a>
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="px-4 py-4 border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm" id="sidebarAvatar">U</div>
+      <div><p class="text-white font-semibold text-sm" id="sidebarName">User</p><p class="text-slate-500 text-xs" id="sidebarRole">Citizen</p></div>
+    </div>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+    <a id="navHome" href="dashboard.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gauge-high w-4 text-center"></i> Dashboard</a>
+    <a href="cases.html"     class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-folder-open w-4 text-center"></i> Cases</a>
+    <a href="hearings.html"  class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-gavel w-4 text-center"></i> Hearings</a>
+    <a href="documents.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-file-magnifying-glass w-4 text-center"></i> Documents</a>
+    <a href="drafts.html"    class="sidebar-link active flex items-center gap-3 px-3 py-2.5 text-sm font-medium"><i class="fas fa-file-pen w-4 text-center text-indigo-400"></i> Drafts</a>
+    <a href="assistant.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-robot w-4 text-center"></i> AI Assistant</a>
+    <a href="awareness.html" class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-book-open w-4 text-center"></i> Legal Awareness</a>
+    <a href="planning.html"  class="sidebar-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400"><i class="fas fa-diagram-project w-4 text-center"></i> Planning</a>
+  </nav>
+  <div class="px-3 py-4 border-t border-white/5">
+    <button onclick="handleLogout()" class="sidebar-link w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-red-400"><i class="fas fa-right-from-bracket w-4 text-center"></i> Sign Out</button>
+  </div>
+</aside>
+<div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+  <header class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-4 flex items-center gap-4">
+    <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white"><i class="fas fa-bars text-lg"></i></button>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+      <i class="fas fa-house text-xs"></i><i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-slate-300 font-medium">AI Draft Generator</span>
+    </div>
+    <div class="ml-auto flex items-center gap-2 glass rounded-xl px-3 py-1.5">
+      <i class="fas fa-robot text-indigo-400 text-xs"></i>
+      <span class="text-indigo-300 text-xs font-medium">Powered by LegalLens AI</span>
+    </div>
+  </header>
+
+  <main class="flex-1 overflow-y-auto">
+    <div class="flex h-full flex-col lg:flex-row">
+
+      <!-- LEFT: Input Panel -->
+      <div class="w-full lg:w-[420px] flex-shrink-0 border-r border-white/5 overflow-y-auto p-6 space-y-5">
+
+        <div>
+          <h2 class="text-white font-bold text-lg">Draft Generator</h2>
+          <p class="text-slate-500 text-sm mt-0.5">Generate professional legal documents in seconds</p>
+        </div>
+
+        <!-- Document Type Cards -->
+        <div class="space-y-2">
+          <label class="text-slate-300 text-sm font-medium">Document Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'legal-notice')">
+              <i class="fas fa-envelope-open-text text-amber-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">Legal Notice</p>
+            </div>
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'nda')">
+              <i class="fas fa-handshake-simple text-blue-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">NDA</p>
+            </div>
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'affidavit')">
+              <i class="fas fa-stamp text-purple-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">Affidavit</p>
+            </div>
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'complaint')">
+              <i class="fas fa-file-circle-exclamation text-red-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">Complaint</p>
+            </div>
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'rent-agreement')">
+              <i class="fas fa-house-circle-check text-green-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">Rent Agreement</p>
+            </div>
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'bail-application')">
+              <i class="fas fa-gavel text-rose-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">Bail Application</p>
+            </div>
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'poa')">
+              <i class="fas fa-file-signature text-cyan-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">Power of Attorney</p>
+            </div>
+            <div class="type-card glass rounded-xl p-3 text-center" onclick="selectType(this,'vakalatnama')">
+              <i class="fas fa-user-tie text-orange-400 text-xl mb-1.5 block"></i>
+              <p class="text-white text-xs font-semibold">Vakalatnama</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Fields -->
+        <div id="dynamicFields" class="space-y-3">
+          <div class="glass rounded-xl p-4 text-center text-slate-500 text-sm">
+            <i class="fas fa-arrow-up block text-2xl mb-2 text-slate-700"></i>
+            Select a document type to continue
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <button id="generateBtn" onclick="generateDraft()" disabled
+          class="w-full btn-primary rounded-xl py-3.5 text-white font-bold text-sm flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all">
+          <i class="fas fa-wand-magic-sparkles text-sm"></i> Generate Draft
+        </button>
+
+        <!-- Saved Drafts -->
+        <div class="space-y-2" id="savedDraftsSection">
+          <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Recent Drafts</p>
+          <div id="savedDraftsList" class="space-y-2"></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Preview Panel -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <!-- Preview Toolbar -->
+        <div class="flex-shrink-0 glass-dark border-b border-white/5 px-6 py-3 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-500/60"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-500/60"></div>
+            <div class="w-3 h-3 rounded-full bg-green-500/60"></div>
+            <span class="ml-2 text-slate-500 text-xs" id="previewTitle">No draft generated</span>
+          </div>
+          <div class="flex items-center gap-2" id="previewActions">
+            <button onclick="copyDraft()" id="copyBtn" class="hidden glass px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white transition-all"><i class="fas fa-copy mr-1.5"></i>Copy</button>
+            <button onclick="downloadDraft()" id="downloadBtn" class="hidden glass px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white transition-all"><i class="fas fa-download mr-1.5"></i>Download</button>
+            <button onclick="saveDraft()" id="saveBtn" class="hidden btn-primary px-3 py-1.5 rounded-lg text-xs text-white font-medium"><i class="fas fa-bookmark mr-1.5 text-xs"></i>Save</button>
+          </div>
+        </div>
+
+        <!-- Draft Output -->
+        <div class="flex-1 overflow-y-auto p-8" id="previewPane">
+          <!-- Empty state -->
+          <div id="emptyPreview" class="h-full flex flex-col items-center justify-center text-center">
+            <div class="w-20 h-20 rounded-3xl bg-white/5 border border-white/8 flex items-center justify-center mb-6">
+              <i class="fas fa-file-pen text-slate-600 text-3xl"></i>
+            </div>
+            <h3 class="text-slate-400 font-bold text-lg">Your draft will appear here</h3>
+            <p class="text-slate-600 text-sm mt-2 max-w-sm">Select a document type, fill in the details and click Generate Draft</p>
+            <div class="mt-6 grid grid-cols-3 gap-3">
+              <div class="glass rounded-xl p-3 text-center"><i class="fas fa-bolt text-amber-400 block mb-1"></i><p class="text-slate-500 text-xs">Instant</p></div>
+              <div class="glass rounded-xl p-3 text-center"><i class="fas fa-scale-balanced text-indigo-400 block mb-1"></i><p class="text-slate-500 text-xs">Legal</p></div>
+              <div class="glass rounded-xl p-3 text-center"><i class="fas fa-pen text-purple-400 block mb-1"></i><p class="text-slate-500 text-xs">Editable</p></div>
+            </div>
+          </div>
+          <!-- Generating state -->
+          <div id="generatingState" class="hidden h-full flex flex-col items-center justify-center text-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+              <i class="fas fa-circle-notch text-indigo-400 text-2xl animate-spin-slow"></i>
+            </div>
+            <p class="text-white font-bold">Generating your draft...</p>
+            <p class="text-slate-500 text-sm">AI is drafting your document</p>
+          </div>
+          <!-- Draft content -->
+          <div id="draftContent" class="hidden max-w-2xl mx-auto">
+            <div class="glass rounded-2xl p-8 space-y-1">
+              <div id="draftText" class="draft-output text-slate-300 text-sm leading-relaxed"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+const session = JSON.parse(localStorage.getItem('ll_session') || sessionStorage.getItem('ll_session') || 'null');
+if (!session || !session.token) { window.location.href = 'login.html'; }
+const roleHome = { admin:'admin-dashboard.html', judge:'judge-dashboard.html', lawyer:'lawyer-dashboard.html', user:'dashboard.html' };
+document.getElementById('navHome').href = roleHome[session?.role] || 'dashboard.html';
+document.getElementById('sidebarName').textContent = session?.name || 'User';
+document.getElementById('sidebarAvatar').textContent = session?.name?.charAt(0).toUpperCase() || 'U';
+document.getElementById('sidebarRole').textContent = (session?.role||'user').charAt(0).toUpperCase()+(session?.role||'user').slice(1);
+
+let selectedDocType = '';
+let currentDraftText = '';
+let savedDrafts = JSON.parse(localStorage.getItem('ll_drafts') || '[]');
+
+const TYPE_FIELDS = {
+  'legal-notice': [
+    { id:'ln_sender',    label:'Sender Name',          ph:'Your full legal name'       },
+    { id:'ln_receiver',  label:'Recipient Name',        ph:'Recipient\'s name'          },
+    { id:'ln_subject',   label:'Subject / Issue',       ph:'e.g. Unpaid dues of ₹50,000'},
+    { id:'ln_amount',    label:'Amount / Demand',       ph:'e.g. ₹50,000'               },
+    { id:'ln_days',      label:'Response Days',         ph:'e.g. 15',     type:'number' },
+  ],
+  'nda': [
+    { id:'nda_party1',   label:'Party 1 (Disclosing)', ph:'Company / Person name' },
+    { id:'nda_party2',   label:'Party 2 (Receiving)',  ph:'Company / Person name' },
+    { id:'nda_purpose',  label:'Purpose of NDA',       ph:'e.g. Business collaboration' },
+    { id:'nda_duration', label:'Duration (years)',     ph:'e.g. 2', type:'number' },
+  ],
+  'affidavit': [
+    { id:'aff_name',     label:'Deponent Name',        ph:'Your full name'         },
+    { id:'aff_age',      label:'Age',                  ph:'e.g. 35', type:'number' },
+    { id:'aff_address',  label:'Address',              ph:'Full residential address'},
+    { id:'aff_content',  label:'Statement',            ph:'I hereby solemnly affirm that...', textarea:true },
+  ],
+  'complaint': [
+    { id:'cmp_name',     label:'Complainant Name',     ph:'Your full name'        },
+    { id:'cmp_against',  label:'Complaint Against',    ph:'Person / Company name' },
+    { id:'cmp_issue',    label:'Nature of Complaint',  ph:'Brief description',    textarea:true },
+    { id:'cmp_relief',   label:'Relief Sought',        ph:'What outcome do you want?' },
+  ],
+  'rent-agreement': [
+    { id:'ra_landlord',  label:'Landlord Name',        ph:'Full name'          },
+    { id:'ra_tenant',    label:'Tenant Name',          ph:'Full name'          },
+    { id:'ra_address',   label:'Property Address',     ph:'Full address'       },
+    { id:'ra_rent',      label:'Monthly Rent (₹)',     ph:'e.g. 20000', type:'number' },
+    { id:'ra_deposit',   label:'Security Deposit (₹)', ph:'e.g. 40000', type:'number' },
+    { id:'ra_duration',  label:'Duration (months)',    ph:'e.g. 11',    type:'number' },
+  ],
+  'bail-application': [
+    { id:'ba_accused',   label:'Accused Name',         ph:'Full name'          },
+    { id:'ba_case',      label:'FIR / Case No.',       ph:'e.g. FIR No. 123/2026' },
+    { id:'ba_section',   label:'IPC Section(s)',       ph:'e.g. 420, 467 IPC'  },
+    { id:'ba_ground',    label:'Grounds for Bail',     ph:'e.g. First-time offender, no criminal record', textarea:true },
+  ],
+  'poa': [
+    { id:'poa_grantor',  label:'Grantor Name',         ph:'Person giving authority'    },
+    { id:'poa_agent',    label:'Agent / Attorney',     ph:'Person receiving authority' },
+    { id:'poa_scope',    label:'Scope of Authority',   ph:'e.g. Manage property, sign documents', textarea:true },
+  ],
+  'vakalatnama': [
+    { id:'vk_client',    label:'Client Name',          ph:'Your full name'         },
+    { id:'vk_lawyer',    label:'Advocate Name',        ph:'Advocate\'s full name'  },
+    { id:'vk_barno',     label:'Bar Enrollment No.',   ph:'e.g. DL/2018/12345'    },
+    { id:'vk_court',     label:'Court Name',           ph:'e.g. Delhi High Court'  },
+    { id:'vk_case',      label:'Case No.',             ph:'e.g. LL-2025-089'       },
+  ],
+};
+
+const DRAFT_TEMPLATES = {
+  'legal-notice': (f) => `LEGAL NOTICE
+
+Date: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}
+
+To,
+${f.ln_receiver || '[Recipient Name]'}
+
+Subject: Legal Notice for ${f.ln_subject || '[Issue]'}
+
+Sir/Madam,
+
+I, ${f.ln_sender || '[Your Name]'}, am sending you this legal notice under the provisions of the Civil Procedure Code, 1908, and other applicable laws.
+
+It is brought to your notice that despite repeated requests and reminders, you have failed to address the matter of ${f.ln_subject || '[describe issue]'}, resulting in a loss/demand of ${f.ln_amount || '[Amount]'}.
+
+You are hereby called upon to settle the said matter and pay/comply with the demand of ${f.ln_amount || '[Amount]'} within ${f.ln_days || '15'} days from the receipt of this notice.
+
+In the event of failure to comply within the stipulated time, my client shall be compelled to initiate appropriate legal proceedings before the competent court of law, entirely at your risk, cost and consequence.
+
+This Notice is being sent without prejudice to any other rights and remedies available under law.
+
+Yours faithfully,
+
+${f.ln_sender || '[Sender Name]'}
+Date: ${new Date().toLocaleDateString('en-IN')}`,
+
+  'nda': (f) => `NON-DISCLOSURE AGREEMENT
+
+This Non-Disclosure Agreement ("Agreement") is entered into as of ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}, between:
+
+DISCLOSING PARTY: ${f.nda_party1 || '[Party 1]'}
+RECEIVING PARTY:  ${f.nda_party2 || '[Party 2]'}
+
+1. PURPOSE
+This Agreement is entered for the purpose of: ${f.nda_purpose || '[Purpose]'}
+
+2. CONFIDENTIAL INFORMATION
+"Confidential Information" means any data or information that is proprietary to the Disclosing Party and not generally known to the public, including but not limited to business strategies, technical data, trade secrets, financial information, or any other information disclosed during the course of this Agreement.
+
+3. OBLIGATIONS
+The Receiving Party agrees to:
+  (a) Hold the Confidential Information in strict confidence
+  (b) Not disclose the Confidential Information to any third party
+  (c) Use the Confidential Information solely for the stated purpose
+
+4. DURATION
+This Agreement shall remain in effect for a period of ${f.nda_duration || '2'} year(s) from the date of execution.
+
+5. GOVERNING LAW
+This Agreement shall be governed by the laws of India.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.
+
+DISCLOSING PARTY: _____________________    RECEIVING PARTY: _____________________
+${f.nda_party1 || '[Party 1]'}                              ${f.nda_party2 || '[Party 2]'}`,
+
+  'affidavit': (f) => `AFFIDAVIT
+
+I, ${f.aff_name || '[Name]'}, aged ${f.aff_age || '[Age]'} years, residing at ${f.aff_address || '[Address]'}, do hereby solemnly affirm and declare as under:
+
+1. That I am the deponent herein and am competent to swear this affidavit.
+
+2. ${f.aff_content || '[Your statement here]'}
+
+3. That the contents of this affidavit are true and correct to the best of my knowledge and belief and nothing has been concealed therefrom.
+
+DEPONENT
+
+Verified at _____________ on this ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} that the contents of the above affidavit are true and correct to my knowledge.
+
+DEPONENT: _______________________
+Name: ${f.aff_name || '[Name]'}`,
+
+  'complaint': (f) => `COMPLAINT
+
+Date: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}
+
+To,
+The Concerned Authority
+
+Subject: Complaint against ${f.cmp_against || '[Respondent]'}
+
+Respected Sir/Madam,
+
+I, ${f.cmp_name || '[Your Name]'}, respectfully submit this complaint against ${f.cmp_against || '[Respondent Name]'} for the following reasons:
+
+FACTS OF THE COMPLAINT:
+${f.cmp_issue || '[Describe the complaint in detail]'}
+
+RELIEF SOUGHT:
+${f.cmp_relief || '[State the relief or action you are requesting]'}
+
+I request your kind intervention and appropriate action in this matter at the earliest.
+
+Thanking you,
+
+Yours faithfully,
+${f.cmp_name || '[Your Name]'}
+Date: ${new Date().toLocaleDateString('en-IN')}`,
+
+  'rent-agreement': (f) => `RENT AGREEMENT
+
+This Rent Agreement is made and executed on ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} between:
+
+LANDLORD: ${f.ra_landlord || '[Landlord Name]'} (hereinafter referred to as "Landlord")
+TENANT:   ${f.ra_tenant   || '[Tenant Name]'}   (hereinafter referred to as "Tenant")
+
+PROPERTY: ${f.ra_address  || '[Property Address]'}
+
+TERMS AND CONDITIONS:
+
+1. TENURE: This agreement is valid for ${f.ra_duration || '11'} months commencing from the date of execution.
+
+2. RENT: The monthly rent shall be ₹${f.ra_rent || '[Amount]'}/- (Rupees ${f.ra_rent || '[Amount]'} only), payable by the 5th of each month.
+
+3. SECURITY DEPOSIT: The Tenant has paid a security deposit of ₹${f.ra_deposit || '[Amount]'}/- which shall be refunded within 30 days of vacating, subject to deductions for damages.
+
+4. MAINTENANCE: The Tenant shall be responsible for day-to-day minor maintenance. Major structural repairs shall be borne by the Landlord.
+
+5. TERMINATION: Either party may terminate this agreement by providing 30 days written notice.
+
+6. SUBLETTING: The Tenant shall not sublet the property without prior written consent of the Landlord.
+
+IN WITNESS WHEREOF, both parties have signed this agreement on the date mentioned above.
+
+LANDLORD: _____________________        TENANT: _____________________
+${f.ra_landlord || '[Landlord]'}                          ${f.ra_tenant || '[Tenant]'}
+
+WITNESS 1: ___________________         WITNESS 2: ___________________`,
+
+  'bail-application': (f) => `IN THE COURT OF ________________
+
+BAIL APPLICATION
+
+In the matter of:
+State vs. ${f.ba_accused || '[Accused Name]'}
+
+FIR No.: ${f.ba_case || '[FIR Number]'}
+Under Section(s): ${f.ba_section || '[IPC Sections]'}
+
+MOST RESPECTFULLY SHOWETH:
+
+1. That the applicant ${f.ba_accused || '[Accused Name]'} has been arrested in connection with FIR No. ${f.ba_case || '[FIR No.]'} registered under Sections ${f.ba_section || '[Sections]'}.
+
+2. That the applicant is innocent and has been falsely implicated in this case.
+
+3. GROUNDS FOR BAIL:
+${f.ba_ground || '[State grounds for bail]'}
+
+4. That the applicant undertakes to abide by all conditions imposed by this Hon'ble Court.
+
+5. That the applicant will not tamper with evidence or influence witnesses.
+
+PRAYER:
+It is, therefore, most respectfully prayed that this Hon'ble Court may be pleased to grant bail to the applicant ${f.ba_accused || '[Accused]'} in the interest of justice.
+
+Place: _____________
+Date: ${new Date().toLocaleDateString('en-IN')}
+
+Applicant / Counsel for the Applicant`,
+
+  'poa': (f) => `POWER OF ATTORNEY
+
+I, ${f.poa_grantor || '[Grantor Name]'}, hereinafter referred to as the "Principal," hereby appoint ${f.poa_agent || '[Agent Name]'} as my true and lawful Attorney-in-Fact.
+
+SCOPE OF AUTHORITY:
+${f.poa_scope || '[Define scope of authority]'}
+
+The Attorney-in-Fact is hereby authorized to do all acts, execute all documents, and take all steps as may be necessary in connection with the above powers, with the same force and effect as if I myself were present and acting.
+
+This Power of Attorney shall remain valid until revoked by me in writing.
+
+Executed on: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}
+
+PRINCIPAL: _______________________
+${f.poa_grantor || '[Grantor Name]'}
+
+Witness 1: ___________    Witness 2: ___________`,
+
+  'vakalatnama': (f) => `VAKALATNAMA
+
+I, ${f.vk_client || '[Client Name]'}, do hereby appoint and retain ${f.vk_lawyer || '[Advocate Name]'}, Advocate (Bar Enrolment No.: ${f.vk_barno || '[Bar No.]'}), to appear, act, and plead on my behalf in:
+
+Court: ${f.vk_court || '[Court Name]'}
+Case No.: ${f.vk_case || '[Case Number]'}
+
+I authorize the said Advocate to:
+  (a) Appear and plead in all proceedings in the above-mentioned case
+  (b) File applications, petitions, and documents as may be necessary
+  (c) Accept service of notices and processes on my behalf
+  (d) Compromise and settle the case with my prior consent
+
+I agree to ratify all acts done by the Advocate in pursuance of this Vakalatnama.
+
+Date: ${new Date().toLocaleDateString('en-IN')}
+
+CLIENT: _______________________              ADVOCATE: _______________________
+${f.vk_client || '[Client Name]'}                               ${f.vk_lawyer || '[Advocate Name]'}`,
+};
+
+function selectType(card, type) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedDocType = type;
+  renderFields(type);
+  document.getElementById('generateBtn').disabled = false;
+  document.getElementById('generateBtn').classList.remove('opacity-50','cursor-not-allowed');
+}
+
+function renderFields(type) {
+  const fields = TYPE_FIELDS[type] || [];
+  document.getElementById('dynamicFields').innerHTML = fields.map(f => `
+    <div class="space-y-1.5">
+      <label class="text-slate-300 text-xs font-medium">${f.label}</label>
+      ${f.textarea
+        ? `<textarea id="${f.id}" rows="3" placeholder="${f.ph}" class="w-full bg-white/4 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all resize-none"></textarea>`
+        : `<input id="${f.id}" type="${f.type||'text'}" placeholder="${f.ph}" class="w-full bg-white/4 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"/>`
+      }
+    </div>
+  `).join('');
+}
+
+function getFieldValues(type) {
+  const fields = TYPE_FIELDS[type] || [];
+  const vals = {};
+  fields.forEach(f => { const el = document.getElementById(f.id); if (el) vals[f.id] = el.value.trim(); });
+  return vals;
+}
+
+function generateDraft() {
+  if (!selectedDocType) { showToast('Select a document type first.', 'error'); return; }
+  document.getElementById('emptyPreview').classList.add('hidden');
+  document.getElementById('draftContent').classList.add('hidden');
+  document.getElementById('generatingState').classList.remove('hidden');
+  ['copyBtn','downloadBtn','saveBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
+
+  setTimeout(() => {
+    const vals = getFieldValues(selectedDocType);
+    const tmpl = DRAFT_TEMPLATES[selectedDocType];
+    currentDraftText = tmpl ? tmpl(vals) : 'Draft template coming soon.';
+    document.getElementById('generatingState').classList.add('hidden');
+    document.getElementById('draftContent').classList.remove('hidden');
+    typewriterEffect(currentDraftText);
+    const label = document.querySelector(`.type-card.selected p`)?.textContent || selectedDocType;
+    document.getElementById('previewTitle').textContent = label + ' — ' + new Date().toLocaleDateString('en-IN');
+    ['copyBtn','downloadBtn','saveBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+  }, 1800);
+}
+
+function typewriterEffect(text) {
+  const el = document.getElementById('draftText');
+  el.textContent = '';
+  el.classList.add('typing-cursor');
+  let i = 0;
+  const speed = text.length > 800 ? 4 : 12;
+  const interval = setInterval(() => {
+    el.textContent = text.slice(0, i);
+    i += speed;
+    if (i >= text.length) { el.textContent = text; el.classList.remove('typing-cursor'); clearInterval(interval); }
+  }, 20);
+}
+
+function copyDraft() {
+  navigator.clipboard.writeText(currentDraftText).then(() => showToast('Draft copied to clipboard!', 'success'));
+}
+
+function downloadDraft() {
+  const label = document.querySelector('.type-card.selected p')?.textContent.replace(/\s+/g,'-') || 'draft';
+  const blob = new Blob([currentDraftText], { type:'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `LegalLens_${label}_${Date.now()}.txt`; a.click();
+  showToast('Draft downloaded!', 'success');
+}
+
+function saveDraft() {
+  const label = document.querySelector('.type-card.selected p')?.textContent || selectedDocType;
+  const draft = { id:Date.now(), type:label, text:currentDraftText, date:new Date().toLocaleDateString('en-IN') };
+  savedDrafts.unshift(draft);
+  if (savedDrafts.length > 5) savedDrafts.pop();
+  localStorage.setItem('ll_drafts', JSON.stringify(savedDrafts));
+  renderSavedDrafts();
+  showToast('Draft saved!', 'success');
+}
+
+function renderSavedDrafts() {
+  document.getElementById('savedDraftsList').innerHTML = savedDrafts.slice(0,3).map(d => `
+    <div class="glass rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-white/8 transition-all" onclick="loadSavedDraft('${d.id}')">
+      <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0"><i class="fas fa-file-lines text-purple-400 text-xs"></i></div>
+      <div class="flex-1 min-w-0"><p class="text-white text-xs font-medium truncate">${d.type}</p><p class="text-slate-600 text-xs">${d.date}</p></div>
+    </div>
+  `).join('') || '<p class="text-slate-600 text-xs text-center py-2">No saved drafts yet</p>';
+}
+
+function loadSavedDraft(id) {
+  const d = savedDrafts.find(x => x.id == id);
+  if (!d) return;
+  currentDraftText = d.text;
+  document.getElementById('emptyPreview').classList.add('hidden');
+  document.getElementById('generatingState').classList.add('hidden');
+  document.getElementById('draftContent').classList.remove('hidden');
+  document.getElementById('draftText').textContent = d.text;
+  document.getElementById('previewTitle').textContent = d.type + ' — ' + d.date;
+  ['copyBtn','downloadBtn','saveBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+}
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar'), o = document.getElementById('sidebarOverlay');
+  const open = !s.classList.contains('-translate-x-full');
+  s.classList.toggle('-translate-x-full', open); o.classList.toggle('hidden', open);
+}
+function handleLogout() { localStorage.removeItem('ll_session'); sessionStorage.removeItem('ll_session'); window.location.href = 'login.html'; }
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 right-6 z-[100] glass-dark rounded-2xl px-5 py-3.5 flex items-center gap-3 shadow-2xl animate-fade-up border ${type==='success'?'border-green-500/30':'border-red-500/30'}`;
+  t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle text-green-400':'fa-circle-exclamation text-red-400'}"></i><span class="text-white text-sm font-medium">${msg}</span>`;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+renderSavedDrafts();
+</script>
+</body>
+</html>
